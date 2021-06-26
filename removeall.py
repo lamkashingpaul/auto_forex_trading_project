@@ -1,4 +1,4 @@
-
+#!/home/paullam/fyp/fypenv/bin/python3
 import sys
 import os
 import django
@@ -10,8 +10,8 @@ django.setup()
 from datetime import datetime
 import pandas_datareader as dr
 import pandas as pd
-from bars.models import Bar, Symbol
+from candlesticks.models import Candlestick
 
 
 if __name__ == '__main__':
-    Bar.objects.all().delete()
+    Candlestick.objects.all().delete()

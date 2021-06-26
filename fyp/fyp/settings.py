@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,19 +26,21 @@ SECRET_KEY = 'django-insecure-+rpd3l_m!8t^yxej3-4pjv-lfs1gwtnk-g5x-0lbeoaja9r1)l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.72']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.72', 'lamkashingpaul.com']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'bars.apps.BarsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # My apps
+    'candlesticks.apps.CandlesticksConfig',
 ]
 
 MIDDLEWARE = [
@@ -118,9 +121,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Production settings
+# Reverse proxy setting
+# Static files
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+# works for runserver debugging
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static/')
+]
