@@ -27,20 +27,22 @@
             orientation: "bottom",
             todayBtn: "linked",
             todayHighlight: true,
-        }).on('changeDate', function (selected) {
-            var minDate = new Date(selected.date);
+        }).on('changeDate', function (event) {
+            var minDate = new Date(event.date);
             minDate.setDate(minDate.getDate() + 1);
             $('#id_end_time').datepicker('setStartDate', minDate);
         });
+    });
 
+    $(function () {
         $("#id_end_time").datepicker({
             autoclose: true,
             format: 'dd/mm/yyyy',
             orientation: "bottom",
             todayBtn: "linked",
             todayHighlight: true,
-        }).on('changeDate', function (selected) {
-            var maxDate = new Date(selected.date);
+        }).on('changeDate', function (event) {
+            var maxDate = new Date(event.date);
             maxDate.getDate(maxDate.getDate() - 1);
             $('#id_start_time').datepicker('setEndDate', maxDate);
         });
@@ -49,6 +51,7 @@
     $(function () {
         $('#history_table').DataTable();
     });
+
 </script>
 <form class="row m-5 needs-validation" method="post" novalidate>
     {% csrf_token %}
@@ -56,7 +59,7 @@
     <div class="col-auto m-1">
         <label for={{field.auto_id}} class="form-label">{{ field.label }}</label>
         {{ field }}
-        {% if field.name != 'symobl' %}
+        {% if field.name == 'start_time' or 'end_time' %}
         <div class="invalid-feedback">
             * Invalid datetime.
         </div>

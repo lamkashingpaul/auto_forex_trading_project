@@ -6,38 +6,56 @@ from django.shortcuts import redirect
 from .models import Candlestick
 from .forms import HistoryForm, MACDForm
 
-from datetime import datetime
 import json
 import pandas as pd
 
 from backtesting import Backtest, Strategy
 from backtesting.lib import crossover
 
-from backtesting.test import SMA, GOOG
+from backtesting.test import SMA
 from bs4 import BeautifulSoup
 
 
 import tempfile
 
 # Create your views here.
+
+
 def index(request):
     template = loader.get_template('candlesticks/index.html')
-    context = {'history_form': HistoryForm()}
+    context = {'history_form': HistoryForm(initial={'symbol': 'EURUSD', 'period': 1440, })}
 
     if request.method == 'POST':
         history_form = HistoryForm(request.POST)
         if history_form.is_valid():
             request.session['saved_history_form'] = json.dumps(history_form.cleaned_data, default=str)
+
             symbol = history_form.cleaned_data['symbol']
             start_time = history_form.cleaned_data['start_time']
             end_time = history_form.cleaned_data['end_time']
-            query_results = Candlestick.objects.filter(symbol__contains=symbol, time__range=(start_time, end_time))
-            context['history_form'] = HistoryForm(initial={'symbol': request.POST['symbol'], 'start_time': request.POST['start_time'], 'end_time': request.POST['end_time']})
+            period = history_form.cleaned_data['period']
+            source = history_form.cleaned_data['source']
+
+            query_results = Candlestick.objects.filter(symbol__contains=symbol,
+                                                       time__range=(start_time, end_time),
+                                                       period__contains=period,
+                                                       source__contains=source
+                                                       )
+
+            context['history_form'] = HistoryForm(initial={'symbol': request.POST['symbol'],
+                                                           'start_time': request.POST['start_time'],
+                                                           'end_time': request.POST['end_time'],
+                                                           'period': request.POST['period'],
+                                                           'source': request.POST['source'],
+                                                           }
+                                                  )
+
             if query_results:
                 context['query_results'] = query_results
                 context['number_of_bars'] = len(query_results)
 
     return HttpResponse(template.render(context, request))
+
 
 def backtest(request):
     template = loader.get_template('backtest/index.html')
@@ -66,6 +84,7 @@ def backtest(request):
                         df = pd.DataFrame.from_records(query_results.values('high', 'low', 'open', 'close'), index=index)
                         # df['time'].timestamp()
                         df.columns = ['High', 'Low', 'Open', 'Close']
+
                         class SmaCross(Strategy):
                             n1 = macd_fast_ma_period
                             n2 = macd_slow_ma_period

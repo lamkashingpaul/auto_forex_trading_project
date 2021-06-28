@@ -1,6 +1,5 @@
 from django import forms
 from .models import Candlestick
-import datetime
 
 symbol_input_attrs = {
     'class': 'form-control',
@@ -21,27 +20,40 @@ end_time_input_attrs = {
     'placeholder': 'End time'
 }
 
-macd_fast_ma_period_input_attrs ={
+period_input_attrs = {
+    'class': 'form-control',
+}
+
+source_input_attrs = {
+    'class': 'form-control',
+}
+
+macd_fast_ma_period_input_attrs = {
 
 }
 
-macd_slow_ma_period_input_attrs ={
+macd_slow_ma_period_input_attrs = {
 
 }
+
 
 class HistoryForm(forms.Form):
     symbol = forms.ChoiceField(choices=Candlestick.SYMBOLS, widget=forms.Select(attrs=symbol_input_attrs))
     start_time = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=start_time_input_attrs))
     end_time = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=end_time_input_attrs))
+    period = forms.ChoiceField(choices=Candlestick.PERIODS, widget=forms.Select(attrs=period_input_attrs))
+    source = forms.ChoiceField(choices=Candlestick.SOURCES, widget=forms.Select(attrs=source_input_attrs))
 
     def clean(self):
         cleaned_data = super().clean()
         symbol = cleaned_data.get('symbol')
         start_time = cleaned_data.get('start_time')
         end_time = cleaned_data.get('end_time')
+        period = cleaned_data.get('period')
+        source = cleaned_data.get('source')
         if not (start_time < end_time):
             raise forms.ValidationError('Start time must be before end time.')
-        pass
+
 
 class MACDForm(forms.Form):
     macd_fast_ma_period = forms.IntegerField(min_value=2)

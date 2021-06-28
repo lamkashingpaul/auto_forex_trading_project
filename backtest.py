@@ -15,9 +15,10 @@ from backtesting.lib import crossover
 
 from backtesting.test import SMA, GOOG
 
-def load_my_data(symbol: str = 'EURUSD', ):
 
+def load_my_data(symbol: str = 'EURUSD', ):
     pass
+
 
 class SmaCross(Strategy):
     n1 = 10
@@ -33,7 +34,6 @@ class SmaCross(Strategy):
             self.buy()
         elif crossover(self.sma2, self.sma1):
             self.sell()
-
 
 
 bt = Backtest(GOOG, SmaCross,
