@@ -21,7 +21,11 @@
     })();
 
     $(function () {
-        $("#id_start_time").datepicker({
+        $('#history_table').DataTable();
+    });
+
+    $(function () {
+        $("#id_date_from").datepicker({
             autoclose: true,
             format: 'dd/mm/yyyy',
             orientation: "bottom",
@@ -30,12 +34,12 @@
         }).on('changeDate', function (event) {
             var minDate = new Date(event.date);
             minDate.setDate(minDate.getDate() + 1);
-            $('#id_end_time').datepicker('setStartDate', minDate);
+            $('#id_date_before').datepicker('setStartDate', minDate);
         });
     });
 
     $(function () {
-        $("#id_end_time").datepicker({
+        $("#id_date_before").datepicker({
             autoclose: true,
             format: 'dd/mm/yyyy',
             orientation: "bottom",
@@ -44,12 +48,8 @@
         }).on('changeDate', function (event) {
             var maxDate = new Date(event.date);
             maxDate.getDate(maxDate.getDate() - 1);
-            $('#id_start_time').datepicker('setEndDate', maxDate);
+            $('#id_date_from').datepicker('setEndDate', maxDate);
         });
-    });
-
-    $(function () {
-        $('#history_table').DataTable();
     });
 
 </script>
@@ -59,7 +59,7 @@
     <div class="col-auto m-1">
         <label for={{field.auto_id}} class="form-label">{{ field.label }}</label>
         {{ field }}
-        {% if field.name == 'start_time' or 'end_time' %}
+        {% if field.name == 'date_from' or 'date_before' %}
         <div class="invalid-feedback">
             * Invalid datetime.
         </div>
@@ -113,16 +113,18 @@
                         <th>High</th>
                         <th>Low</th>
                         <th>Close</th>
+                        <th>Volume (M)</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in query_results %}
                     <tr>
-                        <td>{{ item.time | utc | date:'Y-m-d H:i' }}</td>
-                        <td>{{ item.open | floatformat:4 }}</td>
-                        <td>{{ item.high | floatformat:4 }}</td>
-                        <td>{{ item.low | floatformat:4 }}</td>
-                        <td>{{ item.close | floatformat:4 }}</td>
+                        <td>{{ item.time | date:'Y-m-d H:i' }}</td>
+                        <td>{{ item.open | floatformat:5 }}</td>
+                        <td>{{ item.high | floatformat:5 }}</td>
+                        <td>{{ item.low | floatformat:5 }}</td>
+                        <td>{{ item.close | floatformat:5 }}</td>
+                        <td>{{ item.volume | floatformat:5 }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -133,11 +135,15 @@
                         <th>High</th>
                         <th>Low</th>
                         <th>Close</th>
+                        <th>Volume (M)</th>
                     </tr>
                 </tfoot>
             </table>
         </div>
     </div>
 </div>
+{% endif %}
+{% if limit_of_result %}
+Note that number of returned bars are limited to {{ limit_of_result }}
 {% endif %}
 {% endblock %}

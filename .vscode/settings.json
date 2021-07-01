@@ -1,6 +1,0 @@
-{
-    "python.pythonPath": "fypenv/bin/python",
-    "python.analysis.extraPaths": [
-        "fyp",
-    ]
-}

@@ -1,23 +1,24 @@
 from django import forms
 from .models import Candlestick
+from datetime import timedelta
 
 symbol_input_attrs = {
     'class': 'form-control',
 }
 
-start_time_input_attrs = {
+date_from_input_attrs = {
     'class': 'form-control',
     'type': 'text',
     'autocomplete': 'off',
-    'placeholder': 'Start time'
+    'placeholder': 'Date from'
 
 }
 
-end_time_input_attrs = {
+date_before_input_attrs = {
     'class': 'form-control',
     'type': 'text',
     'autocomplete': 'off',
-    'placeholder': 'End time'
+    'placeholder': 'Date before'
 }
 
 period_input_attrs = {
@@ -39,20 +40,19 @@ macd_slow_ma_period_input_attrs = {
 
 class HistoryForm(forms.Form):
     symbol = forms.ChoiceField(choices=Candlestick.SYMBOLS, widget=forms.Select(attrs=symbol_input_attrs))
-    start_time = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=start_time_input_attrs))
-    end_time = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=end_time_input_attrs))
+    date_from = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=date_from_input_attrs))
+    date_before = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=date_before_input_attrs))
     period = forms.ChoiceField(choices=Candlestick.PERIODS, widget=forms.Select(attrs=period_input_attrs))
     source = forms.ChoiceField(choices=Candlestick.SOURCES, widget=forms.Select(attrs=source_input_attrs))
 
     def clean(self):
         cleaned_data = super().clean()
-        symbol = cleaned_data.get('symbol')
-        start_time = cleaned_data.get('start_time')
-        end_time = cleaned_data.get('end_time')
-        period = cleaned_data.get('period')
-        source = cleaned_data.get('source')
-        if not (start_time < end_time):
+        date_from = cleaned_data.get('date_from')
+        date_before = cleaned_data.get('date_before')
+        if not (date_from < date_before):
             raise forms.ValidationError('Start time must be before end time.')
+        cleaned_data['date_before'] += timedelta(microseconds=-1)
+        return cleaned_data
 
 
 class MACDForm(forms.Form):

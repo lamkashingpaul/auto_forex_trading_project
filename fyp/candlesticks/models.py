@@ -50,8 +50,8 @@ class Candlestick(models.Model):
 
     # Price type lookup table
     PRICE_TYPES = [
-        (BID, 'Bid')
-        (ASK, 'Ask')
+        (BID, 'Bid'),
+        (ASK, 'Ask'),
     ]
 
     symbol = models.CharField('Symbol', max_length=6, choices=SYMBOLS, default=EURUSD)
@@ -60,7 +60,7 @@ class Candlestick(models.Model):
     high = models.FloatField('High')
     low = models.FloatField('Low')
     close = models.FloatField('Close')
-    volume = models.FloatField('Volume')
+    volume = models.FloatField('Volume (M)')
     period = models.IntegerField('Period', choices=PERIODS, default=Tick)
     source = models.CharField('Source', max_length=16, choices=SOURCES, default=Pandas)
     price_type = models.CharField('Price type', max_length=3, choices=PRICE_TYPES, default=BID)

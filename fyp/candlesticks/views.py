@@ -15,15 +15,25 @@ from backtesting.lib import crossover
 from backtesting.test import SMA
 from bs4 import BeautifulSoup
 
-
 import tempfile
+import datetime
 
 # Create your views here.
+limit_of_result = 2048
+
+# view for index page
 
 
 def index(request):
     template = loader.get_template('candlesticks/index.html')
-    context = {'history_form': HistoryForm(initial={'symbol': 'EURUSD', 'period': 1440, })}
+    context = {'history_form': HistoryForm(initial={'symbol': 'EURUSD',
+                                                    'date_from': '05/05/2003',
+                                                    'date_before': '06/05/2003',
+                                                    'period': 1,
+                                                    'source': 'Dukascopy',
+                                                    }
+                                           )
+               }
 
     if request.method == 'POST':
         history_form = HistoryForm(request.POST)
@@ -31,28 +41,39 @@ def index(request):
             request.session['saved_history_form'] = json.dumps(history_form.cleaned_data, default=str)
 
             symbol = history_form.cleaned_data['symbol']
-            start_time = history_form.cleaned_data['start_time']
-            end_time = history_form.cleaned_data['end_time']
+            date_from = history_form.cleaned_data['date_from']
+            date_before = history_form.cleaned_data['date_before']
             period = history_form.cleaned_data['period']
             source = history_form.cleaned_data['source']
 
+            # slice of query results which has at most {limit_of_result} rows
             query_results = Candlestick.objects.filter(symbol__contains=symbol,
-                                                       time__range=(start_time, end_time),
+                                                       time__range=(date_from, date_before),
                                                        period__contains=period,
-                                                       source__contains=source
-                                                       )
-
-            context['history_form'] = HistoryForm(initial={'symbol': request.POST['symbol'],
-                                                           'start_time': request.POST['start_time'],
-                                                           'end_time': request.POST['end_time'],
-                                                           'period': request.POST['period'],
-                                                           'source': request.POST['source'],
-                                                           }
-                                                  )
+                                                       source__contains=source,
+                                                       )[:limit_of_result]
 
             if query_results:
+                expected_last_query_results = Candlestick.objects.filter(symbol__contains=symbol,
+                                                                         time__range=(date_from, date_before),
+                                                                         period__contains=period,
+                                                                         source__contains=source,
+                                                                         ).order_by('-id')[:1].first()
+
                 context['query_results'] = query_results
-                context['number_of_bars'] = len(query_results)
+                context['number_of_bars'] = query_results.count()
+
+                # check if {query_results} is sliced
+                if query_results[query_results.count() - 1] != expected_last_query_results:
+                    context['limit_of_result'] = limit_of_result
+
+        context['history_form'] = HistoryForm(initial={'symbol': request.POST['symbol'],
+                                                       'date_from': request.POST['date_from'],
+                                                       'date_before': request.POST['date_before'],
+                                                       'period': request.POST['period'],
+                                                       'source': request.POST['source'],
+                                                       }
+                                              )
 
     return HttpResponse(template.render(context, request))
 
@@ -74,9 +95,9 @@ def backtest(request):
                 saved_history_form = HistoryForm(json.loads(request.session['saved_history_form']))
                 if saved_history_form.is_valid():
                     symbol = saved_history_form.cleaned_data['symbol']
-                    start_time = saved_history_form.cleaned_data['start_time']
-                    end_time = saved_history_form.cleaned_data['end_time']
-                    query_results = Candlestick.objects.filter(symbol__contains=symbol, time__range=(start_time, end_time))
+                    date_from = saved_history_form.cleaned_data['date_from']
+                    date_before = saved_history_form.cleaned_data['date_before']
+                    query_results = Candlestick.objects.filter(symbol__contains=symbol, time__range=(date_from, date_before))
                     if query_results:
                         context['query_results'] = query_results
                         times = query_results.values_list('time', flat=True)
