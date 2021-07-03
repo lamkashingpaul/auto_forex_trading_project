@@ -15,11 +15,12 @@ from backtesting.lib import crossover
 from backtesting.test import SMA
 from bs4 import BeautifulSoup
 
+from datetime import date, timedelta
+
 import tempfile
-import datetime
 
 # Create your views here.
-limit_of_result = 2048
+limit_of_result = 87600
 
 # view for index page
 
@@ -27,9 +28,9 @@ limit_of_result = 2048
 def index(request):
     template = loader.get_template('candlesticks/index.html')
     context = {'history_form': HistoryForm(initial={'symbol': 'EURUSD',
-                                                    'date_from': '05/05/2003',
-                                                    'date_before': '06/05/2003',
-                                                    'period': 1,
+                                                    'date_from': (date.today() + timedelta(days=-365)).strftime('%d/%m/%Y'),
+                                                    'date_before': date.today().strftime('%d/%m/%Y'),
+                                                    'period': 60,
                                                     'source': 'Dukascopy',
                                                     }
                                            )
@@ -47,17 +48,19 @@ def index(request):
             source = history_form.cleaned_data['source']
 
             # slice of query results which has at most {limit_of_result} rows
-            query_results = Candlestick.objects.filter(symbol__contains=symbol,
+            query_results = Candlestick.objects.filter(symbol__exact=symbol,
+                                                       period__exact=period,
+                                                       source__exact=source,
                                                        time__range=(date_from, date_before),
-                                                       period__contains=period,
-                                                       source__contains=source,
+                                                       volume__gt=0,
                                                        )[:limit_of_result]
 
             if query_results:
-                expected_last_query_results = Candlestick.objects.filter(symbol__contains=symbol,
+                expected_last_query_results = Candlestick.objects.filter(symbol__exact=symbol,
+                                                                         period__exact=period,
+                                                                         source__exact=source,
                                                                          time__range=(date_from, date_before),
-                                                                         period__contains=period,
-                                                                         source__contains=source,
+                                                                         volume__gt=0,
                                                                          ).order_by('-id')[:1].first()
 
                 context['query_results'] = query_results
@@ -94,17 +97,26 @@ def backtest(request):
 
                 saved_history_form = HistoryForm(json.loads(request.session['saved_history_form']))
                 if saved_history_form.is_valid():
+
                     symbol = saved_history_form.cleaned_data['symbol']
                     date_from = saved_history_form.cleaned_data['date_from']
                     date_before = saved_history_form.cleaned_data['date_before']
-                    query_results = Candlestick.objects.filter(symbol__contains=symbol, time__range=(date_from, date_before))
+                    period = saved_history_form.cleaned_data['period']
+                    source = saved_history_form.cleaned_data['source']
+
+                    query_results = Candlestick.objects.filter(symbol__exact=symbol,
+                                                               period__exact=period,
+                                                               source__exact=source,
+                                                               time__range=(date_from, date_before),
+                                                               volume__gt=0,
+                                                               )[:limit_of_result]
                     if query_results:
                         context['query_results'] = query_results
-                        times = query_results.values_list('time', flat=True)
-                        index = [pd.to_datetime(time, origin='unix') for time in times]
-                        df = pd.DataFrame.from_records(query_results.values('high', 'low', 'open', 'close'), index=index)
+                        df = pd.DataFrame.from_records(data=query_results.values('high', 'low', 'open', 'close', 'volume'),
+                                                       index=query_results.values_list('time', flat=True)
+                                                       )
                         # df['time'].timestamp()
-                        df.columns = ['High', 'Low', 'Open', 'Close']
+                        df.columns = ['High', 'Low', 'Open', 'Close', 'Volume']
 
                         class SmaCross(Strategy):
                             n1 = macd_fast_ma_period

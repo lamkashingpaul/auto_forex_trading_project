@@ -12,3 +12,4 @@ fyp/fyp.sock
 
 # SQLite3 Database
 fyp/db.sqlite3
+fyp/db.sqlite3-journal

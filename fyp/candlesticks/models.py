@@ -55,7 +55,7 @@ class Candlestick(models.Model):
     ]
 
     symbol = models.CharField('Symbol', max_length=6, choices=SYMBOLS, default=EURUSD)
-    time = models.DateTimeField('Datetime', unique=True)
+    time = models.DateTimeField('Datetime')
     open = models.FloatField('Open')
     high = models.FloatField('High')
     low = models.FloatField('Low')

@@ -12,7 +12,6 @@ from datetime import date, datetime, timedelta
 from calendar import monthrange
 import pandas as pd
 
-# PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440]
 PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 
 SYMBOL = 'EURUSD'
@@ -53,6 +52,11 @@ def get_start_and_end_time_of_month(date):
 
 
 def one_minute_to_target_timeframe(date, target_period=5):
+    # find source period, which is previous period of target_period
+    # it is expected bars with previous period already exist, except for month
+    source_period = PERIODS[PERIODS.index(target_period) - 1]
+    resample_rate = target_period
+
     if target_period < 5:
         return
     elif 5 <= target_period <= 1440:
@@ -61,10 +65,8 @@ def one_minute_to_target_timeframe(date, target_period=5):
         time_from, time_before = get_start_and_end_time_of_week(date)
     elif 10080 < target_period <= 43200:
         time_from, time_before = get_start_and_end_time_of_month(date)
-
-    # find source period, which is previous period of target_period
-    # it is expected bars with previous period already exist
-    source_period = PERIODS[PERIODS.index(target_period) - 1]
+        source_period = 1440  # use D1 bars
+        resample_rate = 44640  # at least 44640 minutes which is equal to 31 days
 
     query_results = Candlestick.objects.filter(symbol__exact=SYMBOL,
                                                time__range=(time_from, time_before),
@@ -79,7 +81,7 @@ def one_minute_to_target_timeframe(date, target_period=5):
                                        index=query_results.values_list('time', flat=True),
                                        )
         # build candlestick with 5-minute timframe using resample
-        df = df.resample(f'{target_period}T', closed='left', label='left').apply({'open': 'first',
+        df = df.resample(f'{resample_rate}T', closed='left', label='left').apply({'open': 'first',
                                                                                   'high': 'max',
                                                                                   'low': 'min',
                                                                                   'close': 'last',
@@ -109,6 +111,6 @@ def one_minute_to_target_timeframe(date, target_period=5):
 
 
 if __name__ == '__main__':
+    # for period in (43200, 43200):
     for date in daterange(START_DATE, END_DATE):
-        for period in PERIODS:
-            one_minute_to_target_timeframe(date, target_period=period)
+        one_minute_to_target_timeframe(date, target_period=43200)
