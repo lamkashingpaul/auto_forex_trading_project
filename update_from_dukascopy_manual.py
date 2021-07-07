@@ -24,14 +24,14 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 
 # default parameters for data source
 DATA_ROOT = '/home/paullam/fyp/data'
-SYMBOLS = ['EURUSD']
+SYMBOLS = ['USDJPY']
 PRICE_TYPES = ['BID']  # or 'ASK'
 NUMBER_OF_WORKERS = 4
 SOURCE = 'Dukascopy'
 
 # default date range
-START_DATE = date.today() - timedelta(days=7)
-END_DATE = date.today()
+START_DATE = date(2003, 5, 1)
+END_DATE = date(2003, 6, 1)
 
 
 def daterange(start_date, end_date):
@@ -178,6 +178,12 @@ if __name__ == '__main__':
     for i, minute_bars in enumerate(pool.imap_unordered(add_minute_bar_to_django, pathlist)):
         for minute_bar in minute_bars:
             symbol, time, open, close, low, high, volume, period, price_type = minute_bar
+            if 'JPY' in symbol:
+                pipette_to_price_ratio = 10 ** 3
+            else:
+                pipette_to_price_ratio = 10 ** 5
+
+            # write bar data into Django database
             Candlestick.objects.update_or_create(symbol=symbol,
                                                  time=time,
                                                  period=period,
@@ -185,10 +191,10 @@ if __name__ == '__main__':
                                                  price_type=price_type,
                                                  defaults={'symbol': symbol,
                                                            'time': time,
-                                                           'open': open / 10 ** 5,
-                                                           'high': high / 10 ** 5,
-                                                           'low': low / 10 ** 5,
-                                                           'close': close / 10 ** 5,
+                                                           'open': open / pipette_to_price_ratio,
+                                                           'high': high / pipette_to_price_ratio,
+                                                           'low': low / pipette_to_price_ratio,
+                                                           'close': close / pipette_to_price_ratio,
                                                            'volume': volume,
                                                            'period': period,
                                                            'source': SOURCE,
@@ -197,8 +203,8 @@ if __name__ == '__main__':
                                                  )
 
     # given 1-minute bars, other bars with longer timeframes can be resampled
-    for period in (5, 15, 30, 60, 240, 1440, 10080):
-        for date in daterange(START_DATE, END_DATE):
-            for symbol in SYMBOLS:
-                for price_type in PRICE_TYPES:
+    for period in (5, 15, 30, 60, 240, 1440, 10080, 43200):
+        for symbol in SYMBOLS:
+            for price_type in PRICE_TYPES:
+                for date in daterange(START_DATE, END_DATE):
                     one_minute_to_target_timeframe(symbol, date, price_type, target_period=period)

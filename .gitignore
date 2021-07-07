@@ -1,15 +1,20 @@
-# Vscode Settings
+# Vscode settings
 .vscode/
 
-# Dukascopy Historical Data
+# Dukascopy historical data
 data/
 
-# Python Virtual Environment
+# Python virtual environment
 fypenv/
 
-# uWSGI Sock
+# UWSGI Sock
 fyp/fyp.sock
 
 # SQLite3 Database
 fyp/db.sqlite3
 fyp/db.sqlite3-journal
+
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+*.py[cod]
+*$py.class

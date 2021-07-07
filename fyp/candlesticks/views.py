@@ -22,15 +22,14 @@ import tempfile
 # Create your views here.
 limit_of_result = 87600
 
-# view for index page
-
 
 def index(request):
+    # view for index page
     template = loader.get_template('candlesticks/index.html')
     context = {'history_form': HistoryForm(initial={'symbol': 'EURUSD',
                                                     'date_from': (date.today() + timedelta(days=-365)).strftime('%d/%m/%Y'),
                                                     'date_before': date.today().strftime('%d/%m/%Y'),
-                                                    'period': 60,
+                                                    'period': 1440,
                                                     'source': 'Dukascopy',
                                                     }
                                            )
@@ -69,6 +68,13 @@ def index(request):
                 # check if {query_results} is sliced
                 if query_results[query_results.count() - 1] != expected_last_query_results:
                     context['limit_of_result'] = limit_of_result
+
+                # determine maximum decimal place for one pipette
+                if 'JPY' in symbol:
+                    decimal_place = 3
+                else:
+                    decimal_place = 5
+                context['decimal_place'] = decimal_place
 
         context['history_form'] = HistoryForm(initial={'symbol': request.POST['symbol'],
                                                        'date_from': request.POST['date_from'],

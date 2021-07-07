@@ -24,7 +24,7 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 
 # default parameters for data source
 DATA_ROOT = '/home/paullam/fyp/data'
-SYMBOLS = ['EURUSD']
+SYMBOLS = ['EURUSD', 'GBPUSD']
 PRICE_TYPES = ['BID']  # or 'ASK'
 NUMBER_OF_WORKERS = 4
 SOURCE = 'Dukascopy'
@@ -137,7 +137,7 @@ def one_minute_to_target_timeframe(symbol, date, price_type, target_period=5):
         df = pd.DataFrame.from_records(data=query_results.values('high', 'low', 'open', 'close', 'volume'),
                                        index=query_results.values_list('time', flat=True),
                                        )
-        # build candlestick with 5-minute timframe using resample
+        # build candlestick with target timframe using resample
         df = df.resample(f'{resample_rate}T', closed='left', label='left').apply({'open': 'first',
                                                                                   'high': 'max',
                                                                                   'low': 'min',

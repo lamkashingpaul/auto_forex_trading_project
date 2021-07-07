@@ -120,11 +120,11 @@
                     {% for item in query_results %}
                     <tr>
                         <td>{{ item.time | date:'Y-m-d H:i' }}</td>
-                        <td>{{ item.open | floatformat:5 }}</td>
-                        <td>{{ item.high | floatformat:5 }}</td>
-                        <td>{{ item.low | floatformat:5 }}</td>
-                        <td>{{ item.close | floatformat:5 }}</td>
-                        <td>{{ item.volume | floatformat:5 }}</td>
+                        <td>{{ item.open | floatformat:decimal_place }}</td>
+                        <td>{{ item.high | floatformat:decimal_place }}</td>
+                        <td>{{ item.low | floatformat:decimal_place }}</td>
+                        <td>{{ item.close | floatformat:decimal_place }}</td>
+                        <td>{{ item.volume | floatformat:decimal_place }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
