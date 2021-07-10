@@ -113,7 +113,7 @@
                         <th>High</th>
                         <th>Low</th>
                         <th>Close</th>
-                        <th>Volume (M)</th>
+                        <th>Volume (Millions)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,7 +124,7 @@
                         <td>{{ item.high | floatformat:decimal_place }}</td>
                         <td>{{ item.low | floatformat:decimal_place }}</td>
                         <td>{{ item.close | floatformat:decimal_place }}</td>
-                        <td>{{ item.volume | floatformat:decimal_place }}</td>
+                        <td>{{ item.volume | floatformat:1 }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -135,7 +135,7 @@
                         <th>High</th>
                         <th>Low</th>
                         <th>Close</th>
-                        <th>Volume (M)</th>
+                        <th>Volume (Millions)</th>
                     </tr>
                 </tfoot>
             </table>

@@ -8,16 +8,17 @@ sys.path.append('/home/paullam/fyp/fyp/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'fyp.settings'
 django.setup()
 
-from calendar import monthrange
-from candlesticks.models import Candlestick
-from datetime import datetime, date, timedelta
-from pathlib import Path
-from multiprocessing.dummy import Pool
 import lzma
 import pandas as pd
 import requests
 import struct
 import time
+
+from calendar import monthrange
+from candlesticks.models import Candlestick
+from datetime import datetime, date, timedelta
+from multiprocessing.dummy import Pool
+from pathlib import Path
 
 # lookup variables
 PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
@@ -138,12 +139,14 @@ def one_minute_to_target_timeframe(symbol, date, price_type, target_period=5):
                                        index=query_results.values_list('time', flat=True),
                                        )
         # build candlestick with target timframe using resample
-        df = df.resample(f'{resample_rate}T', closed='left', label='left').apply({'open': 'first',
-                                                                                  'high': 'max',
-                                                                                  'low': 'min',
-                                                                                  'close': 'last',
-                                                                                  'volume': 'sum'}
-                                                                                 )
+        df = df.resample(f'{resample_rate}T',
+                         closed='left',
+                         label='left').apply({'open': 'first',
+                                              'high': 'max',
+                                              'low': 'min',
+                                              'close': 'last',
+                                              'volume': 'sum'}
+                                             )
         # write to Django database
         for time, row in df.iterrows():
             time = time.to_pydatetime()

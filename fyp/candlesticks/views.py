@@ -1,23 +1,23 @@
-from django.shortcuts import render
 from django.http import HttpResponse
-from django.template import loader
 from django.shortcuts import redirect
+from django.shortcuts import render
+from django.template import loader
 
-from .models import Candlestick
 from .forms import HistoryForm, MACDForm
+from .models import Candlestick
 
+import base64
 import json
+import os
 import pandas as pd
+import backtrader as bt
+import tempfile
 
-from backtesting import Backtest, Strategy
-from backtesting.lib import crossover
-
-from backtesting.test import SMA
+from backtrader_plotting import Bokeh
+from backtrader_plotting.schemes import Tradimo
 from bs4 import BeautifulSoup
-
 from datetime import date, timedelta
 
-import tempfile
 
 # Create your views here.
 limit_of_result = 87600
@@ -121,38 +121,114 @@ def backtest(request):
                         df = pd.DataFrame.from_records(data=query_results.values('high', 'low', 'open', 'close', 'volume'),
                                                        index=query_results.values_list('time', flat=True)
                                                        )
-                        # df['time'].timestamp()
-                        df.columns = ['High', 'Low', 'Open', 'Close', 'Volume']
 
-                        class SmaCross(Strategy):
-                            n1 = macd_fast_ma_period
-                            n2 = macd_slow_ma_period
+                        # define Strategy
+                        class TestStrategy(bt.Strategy):
+                            params = (
+                                ('exitbars', 5),
+                            )
 
-                            def init(self):
-                                close = self.data.Close
-                                self.sma1 = self.I(SMA, close, self.n1)
-                                self.sma2 = self.I(SMA, close, self.n2)
+                            def log(self, txt, dt=None):
+                                ''' Logging function fot this strategy'''
+                                dt = dt or self.datas[0].datetime.date(0)
+                                print('%s, %s' % (dt.isoformat(), txt))
+
+                            def __init__(self):
+                                # Keep a reference to the "close" line in the data[0] dataseries
+                                self.dataclose = self.datas[0].close
+
+                                # To keep track of pending orders and buy price/commission
+                                self.order = None
+                                self.buyprice = None
+                                self.buycomm = None
+
+                            def notify_order(self, order):
+                                if order.status in [order.Submitted, order.Accepted]:
+                                    # Buy/Sell order submitted/accepted to/by broker - Nothing to do
+                                    return
+                                # Check if an order has been completed
+                                # Attention: broker could reject order if not enough cash
+                                if order.status in [order.Completed]:
+                                    if order.isbuy():
+                                        self.log(
+                                            'BUY EXECUTED, Price: %.5f, Cost: %.5f, Comm %.5f' %
+                                            (order.executed.price,
+                                             order.executed.value,
+                                             order.executed.comm))
+
+                                        self.buyprice = order.executed.price
+                                        self.buycomm = order.executed.comm
+                                    else:  # Sell
+                                        self.log('SELL EXECUTED, Price: %.5f, Cost: %.5f, Comm %.5f' %
+                                                 (order.executed.price,
+                                                  order.executed.value,
+                                                  order.executed.comm))
+                                    self.bar_executed = len(self)
+                                elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+                                    self.log('Order Canceled/Margin/Rejected')
+                                self.order = None
+
+                            def notify_trade(self, trade):
+                                if not trade.isclosed:
+                                    return
+                                self.log('OPERATION PROFIT, GROSS %.5f, NET %.5f' %
+                                         (trade.pnl, trade.pnlcomm))
 
                             def next(self):
-                                if crossover(self.sma1, self.sma2):
-                                    self.buy()
-                                elif crossover(self.sma2, self.sma1):
-                                    self.sell()
+                                # Simply log the closing price of the series from the reference
+                                self.log('Close, %.5f' % self.dataclose[0])
+                                # Check if an order is pending ... if yes, we cannot send a 2nd one
+                                if self.order:
+                                    return
+                                # Check if we are in the market
+                                if not self.position:
+                                    # Not yet ... we MIGHT BUY if ...
+                                    if self.dataclose[0] < self.dataclose[-1]:
+                                        # current close less than previous close
+                                        if self.dataclose[-1] < self.dataclose[-2]:
+                                            # previous close less than the previous close
 
-                        bt = Backtest(df, SmaCross,
-                                      cash=10000, commission=.002,
-                                      exclusive_orders=True)
+                                            # BUY, BUY, BUY!!! (with default parameters)
+                                            self.log('BUY CREATE, %.5f' % self.dataclose[0])
 
-                        temp_name = tempfile.mkstemp()[1]
-                        output = bt.run()
-                        context['output'] = str(output)
-                        bt.plot(filename=f'{temp_name}_backtesttemp', open_browser=False)
+                                            # Keep track of the created order to avoid a 2nd order
+                                            self.order = self.buy()
+                                else:
+                                    # Already in the market ... we might sell
+                                    if len(self) >= (self.bar_executed + self.params.exitbars):
+                                        # SELL, SELL, SELL!!! (with all possible default parameters)
+                                        self.log('SELL CREATE, %.5f' % self.dataclose[0])
 
-                        with open(f'{temp_name}_backtesttemp.html') as f:
+                                        # Keep track of the created order to avoid a 2nd order
+                                        self.order = self.sell()
+
+                        # backtest
+                        cerebro = bt.Cerebro()
+                        cerebro.addstrategy(TestStrategy)
+                        data = bt.feeds.PandasData(dataname=df)
+                        cerebro.adddata(data, name='test')
+                        cerebro.broker.setcash(100000.0)
+                        cerebro.broker.setcommission(commission=0.001)
+                        print('Starting Portfolio Value: %.5f' % cerebro.broker.getvalue())
+                        cerebro.run()
+                        print('Final Portfolio Value: %.5f' % cerebro.broker.getvalue())
+
+                        temp_dir = tempfile.gettempdir()
+                        temp_name = f'{next(tempfile._get_candidate_names())}.html'
+                        html_path = os.path.join(temp_dir, temp_name)
+                        b = Bokeh(filename=html_path, style='bar', scheme=Tradimo(), output_mode='save', legend_text_color='#ff0000')
+                        cerebro.plot(b)
+
+                        with open(html_path) as f:
                             soup = BeautifulSoup(f, 'html.parser')
+                            style = soup.find('style')
+                            html_style = ''.join(['%s' % x for x in style.contents])
+
                             body = soup.find('body')
-                            plot = ''.join(['%s' % x for x in body.contents])
-                            context['plot'] = plot
+                            html_body = ''.join(['%s' % x for x in body.contents])
+
+                            context['html_style'] = html_style
+                            context['html_body'] = html_body
 
         return HttpResponse(template.render(context, request))
 
