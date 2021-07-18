@@ -51,7 +51,7 @@ def index(request):
                                                        period__exact=period,
                                                        source__exact=source,
                                                        time__range=(date_from, date_before),
-                                                       volume__gt=0,
+                                                       #    volume__gt=0,
                                                        )[:limit_of_result]
 
             if query_results:
@@ -59,7 +59,7 @@ def index(request):
                                                                          period__exact=period,
                                                                          source__exact=source,
                                                                          time__range=(date_from, date_before),
-                                                                         volume__gt=0,
+                                                                         #  volume__gt=0,
                                                                          ).order_by('-id')[:1].first()
 
                 context['query_results'] = query_results
@@ -114,7 +114,7 @@ def backtest(request):
                                                                period__exact=period,
                                                                source__exact=source,
                                                                time__range=(date_from, date_before),
-                                                               volume__gt=0,
+                                                               #    volume__gt=0,
                                                                )[:limit_of_result]
                     if query_results:
                         context['query_results'] = query_results

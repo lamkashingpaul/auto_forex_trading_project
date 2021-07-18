@@ -6,39 +6,63 @@ sys.path.append('/home/paullam/fyp/fyp/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'fyp.settings'
 django.setup()
 
+# start of script
 from candlesticks.models import Candlestick
 from datetime import datetime, timedelta, timezone
 import pandas_datareader as dr
 
-from backtesting import Backtest, Strategy
-from backtesting.lib import crossover
-
-from backtesting.test import SMA, GOOG
+import backtrader as bt
 
 
-def load_my_data(symbol: str = 'EURUSD', ):
-    pass
+class TestStrategy(bt.Strategy):
 
+    def log(self, txt, dt=None):
+        ''' Logging function fot this strategy'''
+        dt = dt or self.datas[0].datetime.date(0)
+        print('%s, %s' % (dt.isoformat(), txt))
 
-class SmaCross(Strategy):
-    n1 = 10
-    n2 = 20
-
-    def init(self):
-        close = self.data.Close
-        self.sma1 = self.I(SMA, close, self.n1)
-        self.sma2 = self.I(SMA, close, self.n2)
+    def __init__(self):
+        # Keep a reference to the "close" line in the data[0] dataseries
+        self.dataclose = self.datas[0].close
 
     def next(self):
-        if crossover(self.sma1, self.sma2):
-            self.buy()
-        elif crossover(self.sma2, self.sma1):
-            self.sell()
+        # Simply log the closing price of the series from the reference
+        self.log(f'Close, {self.dataclose[0]:0.2f} Day: {len(self)}/{self.buflen()}')
 
 
-bt = Backtest(GOOG, SmaCross,
-              cash=10000, commission=.002,
-              exclusive_orders=True)
+if __name__ == '__main__':
+    # Create a cerebro entity
+    cerebro = bt.Cerebro()
 
-output = bt.run()
-bt.plot()
+    # Add a strategy
+    cerebro.addstrategy(TestStrategy)
+
+    # Datas are in a subfolder of the samples. Need to find where the script is
+    # because it could have been called from anywhere
+    modpath = os.path.dirname(os.path.abspath(sys.argv[0]))
+    datapath = os.path.join(modpath, './datas/orcl-1995-2014.txt')
+
+    # Create a Data Feed
+    data = bt.feeds.YahooFinanceCSVData(
+        dataname=datapath,
+        # Do not pass values before this date
+        fromdate=datetime(2000, 12, 1),
+        # Do not pass values before this date
+        todate=datetime(2000, 12, 31),
+        # Do not pass values after this date
+        reverse=False)
+
+    # Add the Data Feed to Cerebro
+    cerebro.adddata(data)
+
+    # Set our desired cash start
+    cerebro.broker.setcash(100000.0)
+
+    # Print out the starting conditions
+    print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
+
+    # Run over everything
+    cerebro.run()
+
+    # Print out the final result
+    print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())

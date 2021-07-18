@@ -4,6 +4,9 @@
 # Dukascopy historical data
 data/
 
+# Sample data for backtrader
+datas/
+
 # Python virtual environment
 fypenv/
 

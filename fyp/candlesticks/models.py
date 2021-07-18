@@ -26,13 +26,35 @@ class Candlestick(models.Model):
 
     # Symbols lookup table
     SYMBOLS = [
-        (EURUSD, 'EURUSD'), (EURGBP, 'EURGBP'), (EURAUD, 'EURAUD'), (EURCAD, 'EURCAD'),
-        (EURCHF, 'EURCHF'), (EURJPY, 'EURJPY'), (EURNZD, 'EURNZD'), (AUDCAD, 'AUDCAD'),
-        (AUDCHF, 'AUDCHF'), (AUDJPY, 'AUDJPY'), (AUDNZD, 'AUDNZD'), (AUDUSD, 'AUDUSD'),
-        (CADCHF, 'CADCHF'), (CADJPY, 'CADJPY'), (CHFJPY, 'CHFJPY'), (GBPAUD, 'GBPAUD'),
-        (GBPCAD, 'GBPCAD'), (GBPCHF, 'GBPCHF'), (GBPJPY, 'GBPJPY'), (GBPNZD, 'GBPNZD'),
-        (GBPUSD, 'GBPUSD'), (NZDCAD, 'NZDCAD'), (NZDCHF, 'NZDCHF'), (NZDJPY, 'NZDJPY'),
-        (NZDUSD, 'NZDUSD'), (USDCAD, 'USDCAD'), (USDCHF, 'USDCHF'), (USDJPY, 'USDJPY'),
+        (EURUSD, 'EURUSD'),
+        (USDJPY, 'USDJPY'),
+        (GBPUSD, 'GBPUSD'),
+        (AUDUSD, 'AUDUSD'),
+        (USDCAD, 'USDCAD'),
+        (USDCHF, 'USDCHF'),
+        (NZDUSD, 'NZDUSD'),
+        # Remaning
+        (AUDCAD, 'AUDCAD'),
+        (AUDCHF, 'AUDCHF'),
+        (AUDJPY, 'AUDJPY'),
+        (AUDNZD, 'AUDNZD'),
+        (CADCHF, 'CADCHF'),
+        (CADJPY, 'CADJPY'),
+        (CHFJPY, 'CHFJPY'),
+        (EURAUD, 'EURAUD'),
+        (EURCAD, 'EURCAD'),
+        (EURCHF, 'EURCHF'),
+        (EURGBP, 'EURGBP'),
+        (EURJPY, 'EURJPY'),
+        (EURNZD, 'EURNZD'),
+        (GBPAUD, 'GBPAUD'),
+        (GBPCAD, 'GBPCAD'),
+        (GBPCHF, 'GBPCHF'),
+        (GBPJPY, 'GBPJPY'),
+        (GBPNZD, 'GBPNZD'),
+        (NZDCAD, 'NZDCAD'),
+        (NZDCHF, 'NZDCHF'),
+        (NZDJPY, 'NZDJPY'),
     ]
 
     # Periods lookup table

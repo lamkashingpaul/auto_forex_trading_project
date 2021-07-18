@@ -11,5 +11,7 @@ from candlesticks.models import Candlestick
 
 
 if __name__ == '__main__':
-    if input('Are you sure to remove all candlesticks? (y/n)') == 'y':
-        Candlestick.objects.all().delete()
+    if input('Are you sure to remove all candlesticks? (y/n): ') == 'y':
+        query_result = Candlestick.objects.filter(symbol__exact='NZDUSD')
+        print(query_result.count())
+        query_result.delete()
