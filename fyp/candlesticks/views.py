@@ -52,21 +52,14 @@ def index(request):
                                                        source__exact=source,
                                                        time__range=(date_from, date_before),
                                                        #    volume__gt=0,
-                                                       )[:limit_of_result]
+                                                       ).order_by()[:limit_of_result]
 
             if query_results:
-                expected_last_query_results = Candlestick.objects.filter(symbol__exact=symbol,
-                                                                         period__exact=period,
-                                                                         source__exact=source,
-                                                                         time__range=(date_from, date_before),
-                                                                         #  volume__gt=0,
-                                                                         ).order_by('-id')[:1].first()
-
                 context['query_results'] = query_results
                 context['number_of_bars'] = query_results.count()
 
                 # check if {query_results} is sliced
-                if query_results[query_results.count() - 1] != expected_last_query_results:
+                if query_results.count() >= limit_of_result:
                     context['limit_of_result'] = limit_of_result
 
                 # determine maximum decimal place for one pipette
@@ -110,10 +103,10 @@ def backtest(request):
                     period = saved_history_form.cleaned_data['period']
                     source = saved_history_form.cleaned_data['source']
 
-                    query_results = Candlestick.objects.filter(symbol__exact=symbol,
+                    query_results = Candlestick.objects.filter(time__range=(date_from, date_before),
+                                                               symbol__exact=symbol,
                                                                period__exact=period,
                                                                source__exact=source,
-                                                               time__range=(date_from, date_before),
                                                                #    volume__gt=0,
                                                                )[:limit_of_result]
                     if query_results:

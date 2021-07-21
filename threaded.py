@@ -26,15 +26,16 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 # default parameters for data source
 DATA_ROOT = '/home/paullam/fyp/data'
 SYMBOLS = [
-    'EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD',
-    'EURJPY',
+    'EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD',
+    'USDCAD', 'USDCHF',
 ]
 PRICE_TYPES = ['BID']  # or 'ASK'
 NUMBER_OF_WORKERS = 16
 SOURCE = 'Dukascopy'
 
 # default date range
-START_DATE = date.today() - timedelta(days=7)
+# START_DATE = date(2003, 5, 4)  # known earliest date of available data among 28 symbols
+START_DATE = date(2003, 5, 4)
 END_DATE = date.today()
 
 
@@ -98,11 +99,11 @@ def get_minute_bars_from_bi5_candlestick(date):
                     decompresseddata = f.read()
 
                 for i in range(int(len(decompresseddata) / 24)):
-                    time_shift, open_price, close, low, high, volume = struct.unpack('!5if', decompresseddata[i * 24: (i + 1) * 24])
+                    time_shift, open, close, low, high, volume = struct.unpack('!5if', decompresseddata[i * 24: (i + 1) * 24])
                     bar_time = start_datetime + timedelta(seconds=time_shift)
 
                     write_to_psql(symbol, bar_time, period, SOURCE, price_type,
-                                  open_price / pipette_to_price_ratio,
+                                  open / pipette_to_price_ratio,
                                   close / pipette_to_price_ratio,
                                   low / pipette_to_price_ratio,
                                   high / pipette_to_price_ratio,
@@ -156,7 +157,7 @@ def one_minute_to_target_timeframe(price_type, symbol, target_period, date):
                           row['volume'])
 
 
-def write_to_psql(symbol, bar_time, period, source, price_type, open_price, high, low, close, volume):
+def write_to_psql(symbol, bar_time, period, source, price_type, open, high, low, close, volume):
     Candlestick.objects.update_or_create(symbol=symbol,
                                          time=bar_time,
                                          period=period,
@@ -164,7 +165,7 @@ def write_to_psql(symbol, bar_time, period, source, price_type, open_price, high
                                          price_type=price_type,
                                          defaults={'symbol': symbol,
                                                    'time': bar_time,
-                                                   'open': open_price,
+                                                   'open': open,
                                                    'high': high,
                                                    'low': low,
                                                    'close': close,

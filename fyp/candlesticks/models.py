@@ -33,6 +33,7 @@ class Candlestick(models.Model):
         (USDCAD, 'USDCAD'),
         (USDCHF, 'USDCHF'),
         (NZDUSD, 'NZDUSD'),
+        (EURJPY, 'EURJPY'),
         # Remaning
         (AUDCAD, 'AUDCAD'),
         (AUDCHF, 'AUDCHF'),
@@ -45,7 +46,6 @@ class Candlestick(models.Model):
         (EURCAD, 'EURCAD'),
         (EURCHF, 'EURCHF'),
         (EURGBP, 'EURGBP'),
-        (EURJPY, 'EURJPY'),
         (EURNZD, 'EURNZD'),
         (GBPAUD, 'GBPAUD'),
         (GBPCAD, 'GBPCAD'),
@@ -87,6 +87,10 @@ class Candlestick(models.Model):
     price_type = models.CharField('Price type', max_length=3, choices=PRICE_TYPES, default=BID)
 
     class Meta:
+        indexes = [
+            models.Index(fields=['symbol', 'time', 'period'])
+        ]
+
         constraints = [
             models.UniqueConstraint(
                 fields=['symbol', 'time', 'period', 'price_type', 'source'], name='one_candlestick_per_timeframe_per_source')

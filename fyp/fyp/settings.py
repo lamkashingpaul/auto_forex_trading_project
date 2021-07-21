@@ -41,9 +41,15 @@ INSTALLED_APPS = [
 
     # My apps
     'candlesticks.apps.CandlesticksConfig',
+
+    # Debug tools
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    # Debug tools
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -69,6 +75,11 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+# IPs for debug tool
+INTERNAL_IPS = [
+    '127.0.0.1',
 ]
 
 WSGI_APPLICATION = 'fyp.wsgi.application'
