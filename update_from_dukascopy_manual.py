@@ -25,7 +25,7 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 
 # default parameters for data source
 DATA_ROOT = '/home/paullam/fyp/data'
-SYMBOLS = ['GBPJPY', 'EURGBP']
+SYMBOLS = ['EURCHF', 'AUDNZD']
 PRICE_TYPES = ['BID']  # or 'ASK'
 NUMBER_OF_WORKERS = 16
 SOURCE = 'Dukascopy'
