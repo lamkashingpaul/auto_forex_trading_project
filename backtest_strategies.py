@@ -138,10 +138,11 @@ class BuyAndHold(bt.Strategy):
             print('%s, %s' % (dt.isoformat(), txt))
 
     def start(self):
-        self.val_start = self.broker.get_cash()  # keep the starting cash
+        # keep the starting cash
+        self.val_start = self.broker.get_cash()
 
     def nextstart(self):
-        # Buy all the available cash
+        # buy all with the available cash
         lots = int(self.broker.get_cash() / self.data / self.p.one_lot_size)
         self.buy(size=lots * self.p.one_lot_size)
 
@@ -168,7 +169,7 @@ class MovingAveragesCrossover(bt.Strategy):
     def __init__(self):
         fast_sma = bt.ind.SMA(period=self.p.fast_ma_period)  # fast moving average
         slow_sma = bt.ind.SMA(period=self.p.slow_ma_period)  # slow moving average
-        self.crossover = bt.ind.CrossOver(fast_sma, slow_sma)  # crossover signal
+        self.crossover = bt.ind.CrossOver(fast_sma, slow_sma, plot=False)  # crossover signal
 
     def start(self):
         self.val_start = self.broker.get_cash()  # keep the starting cash
@@ -208,22 +209,24 @@ class RSI(bt.Strategy):
         self.val_start = self.broker.get_cash()  # keep the starting cash
 
     def __init__(self):
-        self.rsi = bt.ind.RSI(period=self.p.period, upperband=self.p.upperband, lowerband=self.p.lowerband)
+        rsi = bt.ind.RSI(period=self.p.period, upperband=self.p.upperband, lowerband=self.p.lowerband)
+        self.buy_signal = bt.ind.CrossOver(rsi, self.p.lowerband, plot=False)
+        self.sell_signal = bt.ind.CrossOver(rsi, self.p.upperband, plot=False)
 
     def next(self):
 
         if not self.position:  # not in the market
-            if self.rsi < self.rsi.p.lowerband:  # if fast crosses slow to the upside
+            if self.buy_signal > 0:  # if RSI crossovers lowerband
                 lots = int(self.broker.get_cash() / self.data / self.p.one_lot_size)
                 self.buy(size=lots * self.p.one_lot_size)  # enter long
 
-        elif self.rsi > self.rsi.p.upperband:  # in the market & cross to the downside
+        elif self.sell_signal < 0:  # in the market & RSI crosses below upperband
             self.close()  # close long position
 
     def stop(self):
         # calculate the actual returns
         self.roi = (self.broker.get_value() / self.val_start) - 1.0
-        print(f'RSI({self.p.period},{self.p.upperband},{self.p.lowerband}) ROI: {100.0 * self.roi:.2f}%')
+        print(f'RSI({self.p.period}) ROI: {100.0 * self.roi:.2f}%', end=', ')
 
 
 class MACD(bt.Strategy):
@@ -244,13 +247,16 @@ class MACD(bt.Strategy):
         self.val_start = self.broker.get_cash()  # keep the starting cash
 
     def __init__(self):
-        macd = bt.ind.MACD(period_me1=self.p.period_me1, period_me2=self.p.period_me2, period_signal=self.p.period_signal)
-        self.crossover = bt.ind.CrossOver(macd.macd, macd.signal)
+        fast_ema = bt.ind.EMA(period=self.p.period_me1)
+        slow_ema = bt.ind.EMA(period=self.p.period_me2)
+
+        macd = bt.ind.MACDHisto(period_me1=self.p.period_me1, period_me2=self.p.period_me2, period_signal=self.p.period_signal)
+        self.crossover = bt.ind.CrossOver(macd.macd, macd.signal, plot=False)
 
     def next(self):
 
         if not self.position:  # not in the market
-            if self.crossover > 0:  # if fast crosses slow to the upside
+            if self.crossover > 0:  # if MACD crosses signal to the upside
                 lots = int(self.broker.get_cash() / self.data / self.p.one_lot_size)
                 self.buy(size=lots * self.p.one_lot_size)  # enter long
 
@@ -260,7 +266,7 @@ class MACD(bt.Strategy):
     def stop(self):
         # calculate the actual returns
         self.roi = (self.broker.get_value() / self.val_start) - 1.0
-        print(f'MACD({self.p.period_me1},{self.p.period_me2},{self.p.period_signal}) ROI: {100.0 * self.roi: .2f} %')
+        print(f'MACD({self.p.period_me1},{self.p.period_me2},{self.p.period_signal}) ROI: {100.0 * self.roi:.2f} %', end=', ')
 
 
 class Stochastic(bt.Strategy):
@@ -286,18 +292,18 @@ class Stochastic(bt.Strategy):
                                 upperband=self.p.upperband,
                                 lowerband=self.p.lowerband,)
 
-        crossover = bt.ind.CrossOver(sto.percK, sto.percD)
+        crossover = bt.ind.CrossOver(sto.percK, sto.percD, plot=False)
 
-        self.buy_signal = bt.And(crossover > 0, sto.percK < sto.p.lowerband, sto.percD < sto.p.lowerband)
-        self.sell_signal = bt.And(crossover < 0, sto.percK > sto.p.upperband, sto.percD > sto.p.upperband)
+        self.buy_signal = bt.And(crossover > 0, sto.percD < sto.p.lowerband)
+        self.sell_signal = bt.And(crossover < 0, sto.percD > sto.p.upperband)
 
     def next(self):
         if not self.position:  # not in the market
-            if self.buy_signal:  # if fast crosses slow to the upside
+            if self.buy_signal:  # if percK crosses percD to the upside and it happens below lowerband
                 lots = int(self.broker.get_cash() / self.data / self.p.one_lot_size)
                 self.buy(size=lots * self.p.one_lot_size)  # enter long
 
-        elif self.sell_signal:  # in the market & cross to the downside
+        elif self.sell_signal:  # in the market & cross to the downside and it happens above upperband
             self.close()  # close long position
 
     def start(self):
@@ -361,7 +367,7 @@ def backtest_strategy(strategy, optimization, plot, m1_low, m1_high, m2_low, m2_
     # Run over everything
     cerebro.run()
 
-    if plot:
+    if plot and not optimization:
         cerebro.plot(style='candlestick', barup='green', bardown='red')
 
 
@@ -381,37 +387,37 @@ def parse_args():
                         default='', required=False,
                         help='strategy to be used during backtesting')
 
-    parser.add_argument('--plot', required=False, default='',
+    parser.add_argument('--plot', '-p', required=False, default='',
                         nargs='?', const='{}',
-                        metavar='kwargs', help='kwargs in key=value format')
+                        metavar='kwargs', help='plot figures at the end')
 
     parser.add_argument('--optimization', '-o',
                         required=False, default='', nargs='?', const='{}',
-                        metavar='kwargs', help='kwargs in key=value format')
+                        metavar='kwargs', help='turn on optimization')
 
     parser.add_argument('--m1_low', type=int,
                         default=12, required=False,
-                        help='MACD Fast MA range low to optimize')
+                        help='#1 Fast MA range low to optimize')
 
     parser.add_argument('--m1_high', type=int,
                         default=20, required=False,
-                        help='MACD Fast MA range high to optimize')
+                        help='#1 Fast MA range high to optimize')
 
     parser.add_argument('--m2_low', type=int,
                         default=26, required=False,
-                        help='MACD Slow MA range low to optimize')
+                        help='#2 Slow MA range low to optimize')
 
     parser.add_argument('--m2_high', type=int,
                         default=30, required=False,
-                        help='MACD Slow MA range high to optimize')
+                        help='#2 Slow MA range high to optimize')
 
     parser.add_argument('--m3_low', type=int,
                         default=2, required=False,
-                        help='MACD Slow MA range low to optimize')
+                        help='#3 Slow MA range low to optimize')
 
     parser.add_argument('--m3_high', type=int,
                         default=10, required=False,
-                        help='MACD Slow MA range high to optimize')
+                        help='#3 Slow MA range high to optimize')
 
     return parser.parse_args()
 
@@ -419,13 +425,13 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     if args.strategy:
-        backtest_strategy(args.strategy, args.optimization, args.plot,
+        backtest_strategy(CLASSES_MAP[args.strategy], args.optimization, args.plot,
                           args.m1_low, args.m1_high,
                           args.m2_low, args.m2_high,
                           args.m3_low, args.m3_high)
     else:
         for strategy in CLASSES_MAP.values():
-            backtest_strategy(strategy, args.optimization, args.plot,
+            backtest_strategy(strategy, args.optimization, False,
                               args.m1_low, args.m1_high,
                               args.m2_low, args.m2_high,
                               args.m3_low, args.m3_high)

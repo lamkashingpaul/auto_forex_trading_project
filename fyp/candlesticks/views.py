@@ -27,8 +27,8 @@ def index(request):
     # view for index page
     template = loader.get_template('candlesticks/index.html')
     context = {'history_form': HistoryForm(initial={'symbol': 'EURUSD',
-                                                    'date_from': (date.today() + timedelta(days=-365)).strftime('%d/%m/%Y'),
-                                                    'date_before': date.today().strftime('%d/%m/%Y'),
+                                                    'date_from': (date.today() + timedelta(days=-1) + timedelta(days=-365)).strftime('%d/%m/%Y'),
+                                                    'date_before': (date.today() + timedelta(days=-1)).strftime('%d/%m/%Y'),
                                                     'period': 1440,
                                                     'source': 'Dukascopy',
                                                     }
