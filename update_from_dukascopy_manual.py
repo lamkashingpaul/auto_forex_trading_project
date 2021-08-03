@@ -25,7 +25,7 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 
 # default parameters for data source
 DATA_ROOT = '/home/paullam/fyp/data'
-SYMBOLS = ['EURCHF', 'AUDNZD']
+SYMBOLS = ['NZDCAD', 'NZDCHF']
 PRICE_TYPES = ['BID']  # or 'ASK'
 NUMBER_OF_WORKERS = 16
 SOURCE = 'Dukascopy'
@@ -121,7 +121,7 @@ def one_minute_to_target_timeframe(price_type, symbol, target_period, date):
     elif 10080 < target_period <= 43200:
         time_from, time_before = get_start_and_end_time_of_month(date)
         source_period = 1440  # use D1 bars
-        resample_rate = 44640  # at least 44640 minutes which to equal to 31 days
+        resample_rate = 44640  # at least 44640 minutes which is equal to 31 days
 
     query_results = Candlestick.objects.filter(symbol__exact=symbol,
                                                period__exact=source_period,

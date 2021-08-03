@@ -38,42 +38,41 @@ class Candlestick(models.Model):
         (EURGBP, 'EURGBP'),
         (AUDJPY, 'AUDJPY'),
         (EURAUD, 'EURAUD'),
-        # Remaning
-        (AUDCAD, 'AUDCAD'),
-        (AUDCHF, 'AUDCHF'),
-        (AUDNZD, 'AUDNZD'),
-        (CADCHF, 'CADCHF'),
-        (CADJPY, 'CADJPY'),
-        (CHFJPY, 'CHFJPY'),
-        (EURCAD, 'EURCAD'),
         (EURCHF, 'EURCHF'),
-        (EURNZD, 'EURNZD'),
+        (AUDNZD, 'AUDNZD'),
+        (NZDJPY, 'NZDJPY'),
         (GBPAUD, 'GBPAUD'),
         (GBPCAD, 'GBPCAD'),
+        (EURNZD, 'EURNZD'),
+        (AUDCAD, 'AUDCAD'),
         (GBPCHF, 'GBPCHF'),
+        (AUDCHF, 'AUDCHF'),
+        (EURCAD, 'EURCAD'),
+        (CADJPY, 'CADJPY'),
         (GBPNZD, 'GBPNZD'),
+        (CADCHF, 'CADCHF'),
+        (CHFJPY, 'CHFJPY'),
         (NZDCAD, 'NZDCAD'),
         (NZDCHF, 'NZDCHF'),
-        (NZDJPY, 'NZDJPY'),
     ]
 
     # Periods lookup table
-    PERIODS = [
+    PERIODS = (
         (Tick, 'Tick'), (M1, 'M1'), (M5, 'M5'), (M15, 'M15'), (M30, 'M30'),
         (H1, 'H1'), (H4, 'H4'), (D1, 'D1'), (W1, 'W1'), (MN, 'MN'),
-    ]
+    )
 
     # Sources lookup table
-    SOURCES = [
+    SOURCES = (
         (Dukascopy, 'Dukascopy'),
         (Pandas, 'Pandas'),
-    ]
+    )
 
     # Price type lookup table
-    PRICE_TYPES = [
+    PRICE_TYPES = (
         (BID, 'Bid'),
         (ASK, 'Ask'),
-    ]
+    )
 
     symbol = models.CharField('Symbol', max_length=6, choices=SYMBOLS, default=EURUSD)
     time = models.DateTimeField('Datetime')

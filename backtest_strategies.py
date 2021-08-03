@@ -1,5 +1,4 @@
 #!/home/paullam/fyp/fypenv/bin/python3
-from backtrader.indicators import percentchange
 from backtrader_plotting import Bokeh
 from backtrader_plotting.schemes import Tradimo
 import argparse

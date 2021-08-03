@@ -29,11 +29,11 @@ source_input_attrs = {
     'class': 'form-control',
 }
 
-macd_fast_ma_period_input_attrs = {
+sma_crossover_fast_ma_period_input_attrs = {
 
 }
 
-macd_slow_ma_period_input_attrs = {
+sma_crossover_slow_ma_period_input_attrs = {
 
 }
 
@@ -55,16 +55,16 @@ class HistoryForm(forms.Form):
         return cleaned_data
 
 
-class MACDForm(forms.Form):
-    macd_fast_ma_period = forms.IntegerField(min_value=2)
-    macd_slow_ma_period = forms.IntegerField(min_value=3)
+class SMACrossoverForm(forms.Form):
+    sma_crossover_fast_ma_period = forms.IntegerField(min_value=2)
+    sma_crossover_slow_ma_period = forms.IntegerField(min_value=3)
     number_of_bars = forms.IntegerField(min_value=4)
 
     def clean(self):
         cleaned_data = super().clean()
-        macd_fast_ma_period = cleaned_data.get('macd_fast_ma_period')
-        macd_slow_ma_period = cleaned_data.get('macd_slow_ma_period')
+        sma_crossover_fast_ma_period = cleaned_data.get('sma_crossover_fast_ma_period')
+        sma_crossover_slow_ma_period = cleaned_data.get('sma_crossover_slow_ma_period')
         number_of_bars = cleaned_data.get('number_of_bars')
-        if not (1 < macd_fast_ma_period < macd_slow_ma_period < number_of_bars):
+        if not (1 < sma_crossover_fast_ma_period < sma_crossover_slow_ma_period < number_of_bars):
             raise forms.ValidationError('Invalid input periods.')
         return cleaned_data
