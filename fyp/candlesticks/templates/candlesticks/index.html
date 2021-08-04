@@ -21,10 +21,6 @@
     })();
 
     $(function () {
-        $('#history_table').DataTable();
-    });
-
-    $(function () {
         $("#id_date_from").datepicker({
             autoclose: true,
             format: 'dd/mm/yyyy',
@@ -53,11 +49,11 @@
     });
 
 </script>
-<form class="row m-5 needs-validation" method="post" novalidate>
+<form class="row m-5 needs-validation" id="id_search_form" method="post" novalidate>
     {% csrf_token %}
     {% for field in history_form %}
     <div class="col-auto m-1">
-        <label for={{field.auto_id}} class="form-label">{{ field.label }}</label>
+        <label for="{{ field.auto_id }}" class="form-label">{{ field.label }}</label>
         {{ field }}
         {% if field.name == 'date_from' or 'date_before' %}
         <div class="invalid-feedback">
@@ -67,17 +63,17 @@
     </div>
     {% endfor %}
     <div class="col-auto m-1">
-        <label for=id_search class="form-label">&nbsp;</label>
+        <label for="id_search" class="form-label">&nbsp;</label>
         <input class="btn btn-primary form-control" id="id_search" name="search" type="submit" value="Search">
     </div>
 </form>
 {% if request.method == 'POST' %}
-{% if query_results.count > 2 %}
+{% if number_of_bars > 2 %}
 <div class="container">
     <div class='row justify-content-sm-center m-2'>
         <legend>Backtest Stratgy</legend>
         <div class="col form-control m-2 text-center">
-            <form id="id_sma_crossover" class="needs-validation" action="backtest/" method="post" novalidate>
+            <form class="needs-validation" id="id_sma_crossover_form" action="backtest/" method="post" novalidate>
                 {% csrf_token %}
                 <div class="form-floating m-2">
                     <input type="number" min="2" class="form-control" name="sma_crossover_fast_ma_period" id="id_sma_crossover_fast_ma_period" placeholder="2" required>
@@ -87,7 +83,7 @@
                     </div>
                 </div>
                 <div class="form-floating m-2">
-                    <input type="number" min="3" max="{{query_results.count|add:'-1'}}" class="form-control" name="sma_crossover_slow_ma_period" id="id_sma_crossover_slow_ma_period" placeholder="3" required>
+                    <input type="number" min="3" max="{{ number_of_bars|add:'-1' }}" class="form-control" name="sma_crossover_slow_ma_period" id="id_sma_crossover_slow_ma_period" placeholder="3" required>
                     <label for="id_sma_crossover_slow_ma_period">Slow MA Period</label>
                     <div class="invalid-feedback">
                         * Slow MA period must be greater than fast MA period and least than number of bars.
@@ -100,7 +96,29 @@
     </div>
 </div>
 {% endif %}
-{% load tz %}
+<script>
+    $(document).ready(function () {
+        $.fn.dataTable.ext.errMode = 'throw';
+        $('#history_table').DataTable({
+            "serverSide": true,
+            "deferRender": true,
+            "ajax": "{{ script_prefix }}/api/candlesticks/?format=datatables",
+            "pagingType": "full_numbers",
+            "columns": [
+                {
+                    "data": "time", "render": function (data, type, full, meta) {
+                        return data.replace("T", " ");
+                    }
+                },
+                { "data": "open", "render": $.fn.dataTable.render.number(',', '.', {{ decimal_place }}) },
+                { "data": "high", "render": $.fn.dataTable.render.number(',', '.', {{ decimal_place }}) },
+                { "data": "low", "render": $.fn.dataTable.render.number(',', '.', {{ decimal_place }}) },
+                { "data": "close", "render": $.fn.dataTable.render.number(',', '.', {{ decimal_place }}) },
+                { "data": "volume", "render": $.fn.dataTable.render.number(',', '.', 2) }
+            ]
+        });
+    });
+</script>
 <div class="container">
     <div class="row m-2">
         <legend>Historical Data</legend>
@@ -116,18 +134,6 @@
                         <th>Volume (Millions)</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for item in query_results %}
-                    <tr>
-                        <td>{{ item.time | date:'Y-m-d H:i' }}</td>
-                        <td>{{ item.open | floatformat:decimal_place }}</td>
-                        <td>{{ item.high | floatformat:decimal_place }}</td>
-                        <td>{{ item.low | floatformat:decimal_place }}</td>
-                        <td>{{ item.close | floatformat:decimal_place }}</td>
-                        <td>{{ item.volume | floatformat:1 }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
                 <tfoot>
                     <tr>
                         <th>Time</th>
@@ -142,18 +148,49 @@
         </div>
     </div>
 </div>
+{% if number_of_bars > 0 %}
+<script src="https://malsup.github.io/jquery.blockUI.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#id_download_csv_form').submit(function () {
+            blockUIForDownload();
+        });
+    });
+
+    var fileDownloadCheckTimer;
+
+    function blockUIForDownload() {
+        var token = new Date().getTime(); //use the current timestamp as the token value
+        $('#id_download_csv_token_value').val(token);
+        $.blockUI();
+        fileDownloadCheckTimer = window.setInterval(function () {
+            var cookieValue = $.cookie('download_csv_token_value');
+            if (cookieValue == token)
+                finishDownload();
+        }, 1000);
+    }
+
+    function finishDownload() {
+        window.clearInterval(fileDownloadCheckTimer);
+        $.removeCookie('download_csv_token_value'); //clears this cookie value
+        $.unblockUI();
+    }
+</script>
 <div class="container">
     <div class="row m-2">
         <div class="col m-2 text-end">
-            <form method="post">
+            <form id="id_download_csv_form" method="post">
                 {% csrf_token %}
-                <button type="submit" name="download_csv" class="btn btn-outline-primary mb-2">Download as CSV</button>
+                {% if limit_of_result %}
+                <label class="mb-2">(*Number of displayed rows is limited to {{ limit_of_result }}, but all rows are available for download)</label>
+                {% endif %}
+                <input type="hidden" id="id_download_csv_token_value" name="download_csv_token_value"/>
+                <button type="submit" id="id_download_csv" name="download_csv" class="btn btn-outline-primary mb-2">Download as CSV</button>
             </form>
         </div>
     </div>
 </div>
 {% endif %}
-{% if limit_of_result %}
-Note that number of returned bars are limited to {{ limit_of_result }}
 {% endif %}
 {% endblock %}

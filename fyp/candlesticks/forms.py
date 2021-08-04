@@ -42,7 +42,7 @@ class HistoryForm(forms.Form):
     symbol = forms.ChoiceField(choices=Candlestick.SYMBOLS, widget=forms.Select(attrs=symbol_input_attrs))
     date_from = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=date_from_input_attrs))
     date_before = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=date_before_input_attrs))
-    period = forms.ChoiceField(choices=Candlestick.PERIODS, widget=forms.Select(attrs=period_input_attrs))
+    period = forms.TypedChoiceField(choices=Candlestick.PERIODS, widget=forms.Select(attrs=period_input_attrs), coerce=int)
     source = forms.ChoiceField(choices=Candlestick.SOURCES, widget=forms.Select(attrs=source_input_attrs))
 
     def clean(self):

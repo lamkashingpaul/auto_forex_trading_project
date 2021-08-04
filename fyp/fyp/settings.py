@@ -30,8 +30,10 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.72', 'lamkashingpaul.com']
 
 
 # Application definition
-
 INSTALLED_APPS = [
+    # Debug tools
+    'debug_toolbar',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,8 +44,8 @@ INSTALLED_APPS = [
     # My apps
     'candlesticks.apps.CandlesticksConfig',
 
-    # Debug tools
-    'debug_toolbar',
+    # Rest framework datatables
+    'rest_framework_datatables',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +60,20 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Rest framework definition
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework_datatables.renderers.DatatablesRenderer',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework_datatables.filters.DatatablesFilterBackend',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables.pagination.DatatablesPageNumberPagination',
+    'PAGE_SIZE': 50,
+}
 
 ROOT_URLCONF = 'fyp.urls'
 
@@ -92,6 +108,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'fyp',
+        # Use Unix socket communication
+        # 'HOST': '192.168.1.1',
+        # 'PORT': '5432',
+        # 'USER': os.environ.get('PG_USER', ''),
+        # 'PASSWORD': os.environ.get('PG_PASS', ''),
     }
 }
 
