@@ -8,7 +8,8 @@ data/
 datas/
 
 # Python virtual environment
-fypenv/
+venv/
+*fypenv/
 
 # UWSGI Sock
 fyp/fyp.sock

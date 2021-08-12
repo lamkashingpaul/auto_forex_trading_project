@@ -1,4 +1,4 @@
-#!/home/paullam/fyp/fypenv/bin/python3
+#!/home/paullam/fyp/venv/bin/python3
 import sys
 import os
 import django
