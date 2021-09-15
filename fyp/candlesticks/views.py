@@ -65,6 +65,7 @@ def index(request):
                                                     'date_before': (date.today() + timedelta(days=-1)).strftime('%d/%m/%Y'),
                                                     'period': 1440,
                                                     'source': 'Dukascopy',
+                                                    'price_type': 'BID',
                                                     }
                                            ),
                'script_prefix': script_prefix,
@@ -80,6 +81,7 @@ def index(request):
                 date_from = history_form.cleaned_data['date_from']
                 date_before = history_form.cleaned_data['date_before']
                 period = history_form.cleaned_data['period']
+                price_type = history_form.cleaned_data['price_type']
                 source = history_form.cleaned_data['source']
 
                 # estimate maximum of allowed date_before
@@ -92,7 +94,9 @@ def index(request):
                 query_results = Candlestick.objects.filter(symbol__exact=symbol,
                                                            period__exact=period,
                                                            source__exact=source,
+                                                           price_type__exact=price_type,
                                                            time__range=(date_from, maximum_date_before),
+                                                           volume__gt=0,
                                                            )
 
                 if query_results:
@@ -119,7 +123,10 @@ def index(request):
                                                            'date_from': request.POST['date_from'],
                                                            'date_before': request.POST['date_before'],
                                                            'period': request.POST['period'],
-                                                           'source': request.POST['source'], })
+                                                           'source': request.POST['source'],
+                                                           'price_type': request.POST['price_type'],
+                                                           }
+                                                  )
 
             # return html page which contains datetable
             return HttpResponse(template.render(context, request))
@@ -141,19 +148,22 @@ def index(request):
                     date_from = saved_history_form.cleaned_data['date_from']
                     date_before = saved_history_form.cleaned_data['date_before']
                     period = saved_history_form.cleaned_data['period']
+                    price_type = saved_history_form.cleaned_data['price_type']
                     source = saved_history_form.cleaned_data['source']
 
-                    query_results = Candlestick.objects.filter(time__range=(date_from, date_before),
-                                                               symbol__exact=symbol,
+                    query_results = Candlestick.objects.filter(symbol__exact=symbol,
                                                                period__exact=period,
                                                                source__exact=source,
+                                                               price_type__exact=price_type,
+                                                               time__range=(date_from, date_before),
+                                                               volume__gt=0,
                                                                )
 
                     # if there is result, generate the csv file from streaming
                     if query_results:
 
                         readable_period = query_results[0].get_period_display()
-                        filename = f'{symbol}_from_{date_from.strftime("%Y%m%d")}_to_{date_before.strftime("%Y%m%d")}_{readable_period}'
+                        filename = f'{symbol}_from_{date_from.strftime("%Y%m%d")}_to_{date_before.strftime("%Y%m%d")}_{readable_period}_{price_type}'
 
                         # construst csv file
                         rows = [('Datetime', 'Open', 'High', 'Low', 'Close', 'Volume(Millions)')]  # header row
@@ -207,11 +217,13 @@ def backtest(request):
                     date_before = saved_history_form.cleaned_data['date_before']
                     period = saved_history_form.cleaned_data['period']
                     source = saved_history_form.cleaned_data['source']
+                    price_type = saved_history_form.cleaned_data['price_type']
 
                     query_results = Candlestick.objects.filter(time__range=(date_from, date_before),
                                                                symbol__exact=symbol,
                                                                period__exact=period,
                                                                source__exact=source,
+                                                               price_type__exact=price_type,
                                                                volume__gt=0,
                                                                ).order_by()
                     if query_results:

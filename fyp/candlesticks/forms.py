@@ -29,6 +29,10 @@ source_input_attrs = {
     'class': 'form-control',
 }
 
+price_type_input_attrs = {
+    'class': 'form-control',
+}
+
 sma_crossover_fast_ma_period_input_attrs = {
 
 }
@@ -43,6 +47,7 @@ class HistoryForm(forms.Form):
     date_from = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=date_from_input_attrs))
     date_before = forms.DateTimeField(input_formats=['%d/%m/%Y'], widget=forms.DateTimeInput(attrs=date_before_input_attrs))
     period = forms.TypedChoiceField(choices=Candlestick.PERIODS, widget=forms.Select(attrs=period_input_attrs), coerce=int)
+    price_type = forms.ChoiceField(choices=Candlestick.PRICE_TYPES, widget=forms.Select(attrs=price_type_input_attrs))
     source = forms.ChoiceField(choices=Candlestick.SOURCES, widget=forms.Select(attrs=source_input_attrs))
 
     def clean(self):

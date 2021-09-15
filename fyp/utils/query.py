@@ -124,10 +124,10 @@ class PSQLData(bt.feeds.DataBase):
     def _connect_db(self):
         conn = psycopg2.connect(database='fyp',
                                 # info below is not needed while using unix socket
-                                host='192.168.1.72',
-                                port='5432',
-                                user=os.environ.get('PG_USER', ''),
-                                password=os.environ.get('PG_PASSWORD', '')
+                                # host='192.168.1.72',
+                                # port='5432',
+                                # user=os.environ.get('PG_USER', ''),
+                                # password=os.environ.get('PG_PASSWORD', '')
                                 )
 
         return conn
@@ -192,13 +192,17 @@ class MACD(bt.Strategy):
 
     def next(self):
 
+        lots = int(self.broker.get_cash() / self.data / self.p.one_lot_size)
+
         if not self.position:  # not in the market
             if self.crossover > 0:  # if MACD crosses signal to the upside
-                lots = int(self.broker.get_cash() / self.data / self.p.one_lot_size)
                 self.buy(size=lots * self.p.one_lot_size)  # enter long
+            elif self.crossover < 0:
+                self.sell(size=lots * self.p.one_lot_size)  # enter short
 
-        elif self.crossover < 0:  # in the market & cross to the downside
-            self.close()  # close long position
+        else:  # in the market
+            if self.crossover > 0 or self.crossover < 0:  # if MACD crosses signal
+                self.order_target_size(target=-self.position.size)  # reverse current position
 
 
 class Stochastic(bt.Strategy):
@@ -322,7 +326,6 @@ def main():
     fig, ax = plt.subplots(len(strategies))
 
     for i, (strategy_name, result) in enumerate(results.items()):
-        print(strategy_name)
         df = pd.DataFrame(result, columns=['date', 'roi'])
         df.set_index('date', inplace=True)
 

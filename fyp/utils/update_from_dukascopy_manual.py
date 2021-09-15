@@ -25,8 +25,8 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 
 # default parameters for data source
 DATA_ROOT = '/home/paullam/fyp/data'
-SYMBOLS = ['NZDCAD', 'NZDCHF']
-PRICE_TYPES = ['BID']  # or 'ASK'
+SYMBOLS = ['EURCAD', 'CADJPY', 'GBPNZD', 'CADCHF', 'CHFJPY', 'NZDCAD', 'NZDCHF', ]
+PRICE_TYPES = ['ASK']  # or 'ASK'
 NUMBER_OF_WORKERS = 16
 SOURCE = 'Dukascopy'
 
