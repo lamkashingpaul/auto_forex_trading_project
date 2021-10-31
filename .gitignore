@@ -7,6 +7,9 @@ data/
 # Sample data for backtrader
 datas/
 
+# Reports of execution
+fyp/executions/reports/
+
 # Python virtual environment
 venv/
 *fypenv/
