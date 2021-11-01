@@ -1,4 +1,4 @@
-from ..utils.indicators import *
+from utils.indicators import *
 import backtrader as bt
 
 
@@ -128,7 +128,7 @@ class MovingAveragesCrossover(bt.Strategy):
         self.fast_sma = fast_sma = bt.ind.SMA(period=self.p.fast_ma_period)  # fast moving average
         self.slow_sma = slow_sma = bt.ind.SMA(period=self.p.slow_ma_period)  # slow moving average
         self.crossover = bt.ind.CrossOver(fast_sma, slow_sma)  # crossover signal
-        self.strength = bt.ind.SMA(abs(fast_sma - fast_sma(-1)), period=1, subplot=True)
+        # self.strength = bt.ind.SMA(abs(fast_sma - fast_sma(-1)), period=1, subplot=True)
 
     def next(self):
 
@@ -144,7 +144,7 @@ class MovingAveragesCrossover(bt.Strategy):
                     return
 
                 # open position with target size
-                self.log(f'fast: {self.fast_sma.lines.sma[0]:.5f}, slow: {self.slow_sma.lines.sma[0]:.5f}, diff: {self.strength.lines.sma[0]:.5f}')
+                # self.log(f'fast: {self.fast_sma.lines.sma[0]:.5f}, slow: {self.slow_sma.lines.sma[0]:.5f}, diff: {self.strength.lines.sma[0]:.5f}')
                 self.order_target_size(target=size)
 
         else:  # in the market
@@ -160,7 +160,7 @@ class MovingAveragesCrossover(bt.Strategy):
             if self.p.use_strength and self.strength.lines.sma[0] < self.p.strength:
                 size = 0
 
-            self.log(f'fast: {self.fast_sma.lines.sma[0]:.5f}, slow: {self.slow_sma.lines.sma[0]:.5f}, diff: {self.strength.lines.sma[0]:.5f}')
+            # self.log(f'fast: {self.fast_sma.lines.sma[0]:.5f}, slow: {self.slow_sma.lines.sma[0]:.5f}, diff: {self.strength.lines.sma[0]:.5f}')
             self.order_target_size(target=size)
 
 
