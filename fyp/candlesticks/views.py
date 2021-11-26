@@ -9,6 +9,7 @@ from rest_framework import viewsets
 from .forms import HistoryForm, SMACrossoverForm
 from .models import Candlestick
 from .serializers import CandlestickSerializer
+from .tasks import add, mul, xsum
 
 from utils.commissions import ForexCommission
 from utils.constants import *
@@ -26,6 +27,7 @@ import json
 import os
 import pandas as pd
 import tempfile
+import time
 
 
 # Create your views here.
@@ -57,6 +59,13 @@ def bar_number_limiter(date_from, date_before, period):
         return maximum_date_before
     else:
         return date_before
+
+
+# celery test
+def celery_test(request):
+    res = add.delay(1, 3)
+    time.sleep(1)
+    return HttpResponse(f'{res.status}, {res.id}')
 
 
 # view for index
@@ -232,7 +241,9 @@ def backtest(request):
                                                                volume__gt=0,
                                                                ).order_by()
                     if query_results:
-                        context['query_results'] = query_results
+                        slice_start = max(len(query_results) - limit_of_result // 4, 0)
+
+                        context['query_results'] = query_results[slice_start:]
                         # backtest
                         period, timeframe, compression, = next(((key, value[1], value[2]) for key, value in PERIODS.items() if value[0] == period), PERIODS['H1'])
 

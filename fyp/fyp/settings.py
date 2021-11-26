@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+rpd3l_m!8t^yxej3-4pjv-lfs1gwtnk-g5x-0lbeoaja9r1)l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.72', 'lamkashingpaul.com']
 
@@ -169,3 +169,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static/')
 ]
+
+# # Celery
+# CELERY_BROKER_URL = 'redis://127.0.0.1:6379'

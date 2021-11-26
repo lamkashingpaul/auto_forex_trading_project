@@ -9,5 +9,6 @@ router.register(r'candlesticks', views.CandlestickViewSet)
 urlpatterns = [
     url('^api/', include(router.urls)),
     path('', views.index, name='index'),
+    path('celery/', views.celery_test, name='celery'),
     path('backtest/', views.backtest, name='index'),
 ]
