@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block script %}
 <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.3.2.min.js"></script>
@@ -14,4 +15,35 @@
 
 {% block content %}
 {{html_body|safe}}
+
+{% if task_id %}
+<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+<script>
+    $(function () {
+        var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
+        CeleryProgressBar.initProgressBar(progressUrl)
+    });
+
+    window.onunload = function(evt) {
+        const endpoint = "";
+        var formData = new FormData();
+        //Required by Django for form post
+        formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+        formData.append("task_id", "{{ task_id }}");
+        navigator.sendBeacon(endpoint, formData);
+    };
+
+</script>
+<div class="container">
+    <div class="row m-2">
+        <div class="col form-control m-2 text-center">
+            <div class="progress-wrapper">
+                <div id="progress-bar" class="progress-bar" style="background-color: #68a9ef; width: 0%;">&nbsp;</div>
+            </div>
+            <div id="progress-bar-message">Waiting for progress to start...</div>
+            <div id="celery-result"></div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

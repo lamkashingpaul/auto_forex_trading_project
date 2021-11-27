@@ -3,13 +3,14 @@ from django.http import HttpResponse, Http404, StreamingHttpResponse
 from django.shortcuts import redirect
 from django.template import loader
 from django.urls import get_script_prefix
-from rest_framework import viewsets
 
+from rest_framework import viewsets
+from fyp.celery import app
 
 from .forms import HistoryForm, SMACrossoverForm
 from .models import Candlestick
 from .serializers import CandlestickSerializer
-from .tasks import add, mul, xsum
+from .tasks import long_test
 
 from utils.commissions import ForexCommission
 from utils.constants import *
@@ -27,7 +28,6 @@ import json
 import os
 import pandas as pd
 import tempfile
-import time
 
 
 # Create your views here.
@@ -59,13 +59,6 @@ def bar_number_limiter(date_from, date_before, period):
         return maximum_date_before
     else:
         return date_before
-
-
-# celery test
-def celery_test(request):
-    res = add.delay(1, 3)
-    time.sleep(1)
-    return HttpResponse(f'{res.status}, {res.id}')
 
 
 # view for index
@@ -210,11 +203,11 @@ def index(request):
 
 # view for backtest
 def backtest(request):
-    template = loader.get_template('backtest/index.html')
-    context = {}
 
     if request.method == 'POST':
         if 'sma_crossover' in request.POST:
+            template = loader.get_template('backtest/index.html')
+            context = {}
             sma_crossover_form = SMACrossoverForm(request.POST)
             if sma_crossover_form.is_valid():
                 request.session['saved_sma_crossover_form'] = json.dumps(sma_crossover_form.cleaned_data, default=str)
@@ -282,6 +275,19 @@ def backtest(request):
 
                             context['html_style'] = html_style
                             context['html_body'] = html_body
+
+        elif 'long_test' in request.POST:
+            res = long_test.delay(60)
+            template = loader.get_template('backtest/index.html')
+            context = {'task_id': res.task_id,
+                       'res_is_ready': res.state,
+                       'html_body': f'Queued long test which has task_id: {res.task_id}',
+                       }
+        elif 'task_id' in request.POST:
+            task_id = request.POST["task_id"]
+            app.control.revoke(task_id, terminate=True)
+            print(f'Revoked task_id: {request.POST["task_id"]}')
+            return HttpResponse('')
 
         return HttpResponse(template.render(context, request))
 

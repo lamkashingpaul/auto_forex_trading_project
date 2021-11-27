@@ -3,18 +3,18 @@
 {% load static %}
 <script>
     (function () {
-        'use strict';
-        window.addEventListener('load', function () {
+        "use strict";
+        window.addEventListener("load", function () {
             // Get the forms we want to add validation styles to
-            var forms = document.getElementsByClassName('needs-validation');
+            var forms = document.getElementsByClassName("needs-validation");
             // Loop over them and prevent submission
             var validation = Array.prototype.filter.call(forms, function (form) {
-                form.addEventListener('submit', function (event) {
+                form.addEventListener("submit", function (event) {
                     if (form.checkValidity() === false) {
                         event.preventDefault();
                         event.stopPropagation();
                     }
-                    form.classList.add('was-validated');
+                    form.classList.add("was-validated");
                 }, false);
             });
         }, false);
@@ -23,28 +23,28 @@
     $(function () {
         $("#id_date_from").datepicker({
             autoclose: true,
-            format: 'dd/mm/yyyy',
+            format: "dd/mm/yyyy",
             orientation: "bottom",
             todayBtn: "linked",
             todayHighlight: true,
-        }).on('changeDate', function (event) {
+        }).on("changeDate", function (event) {
             var minDate = new Date(event.date);
             minDate.setDate(minDate.getDate() + 1);
-            $('#id_date_before').datepicker('setStartDate', minDate);
+            $("#id_date_before").datepicker("setStartDate", minDate);
         });
     });
 
     $(function () {
         $("#id_date_before").datepicker({
             autoclose: true,
-            format: 'dd/mm/yyyy',
+            format: "dd/mm/yyyy",
             orientation: "bottom",
             todayBtn: "linked",
             todayHighlight: true,
-        }).on('changeDate', function (event) {
+        }).on("changeDate", function (event) {
             var maxDate = new Date(event.date);
             maxDate.getDate(maxDate.getDate() - 1);
-            $('#id_date_from').datepicker('setEndDate', maxDate);
+            $("#id_date_from").datepicker("setEndDate", maxDate);
         });
     });
 
@@ -69,37 +69,103 @@
 </form>
 {% if request.method == 'POST' %}
 {% if number_of_bars > 2 %}
+<style>
+    .carousel-control-prev,
+    .carousel-control-next {
+        align-items: flex-end;
+        width: 16px;
+    }
+    .carousel-indicators {
+        margin-bottom: -1px
+    }
+</style>
 <div class="container">
-    <div class='row justify-content-sm-center m-2'>
-        <legend>Backtest Stratgy</legend>
+    <div class="row m-2">
+        <legend>Actions</legend>
         <div class="col form-control m-2 text-center">
-            <form class="needs-validation" id="id_sma_crossover_form" action="backtest/" method="post" novalidate>
-                {% csrf_token %}
-                <div class="form-floating m-2">
-                    <input type="number" min="2" class="form-control" name="sma_crossover_fast_ma_period" id="id_sma_crossover_fast_ma_period" placeholder="2" required>
-                    <label for="id_sma_crossover_fast_ma_period">Fast MA Period</label>
-                    <div class="invalid-feedback">
-                        * Fast MA period must be at least 2.
-                    </div>
+            <div id="carouselExampleDark" class="carousel carousel-dark slide" data-bs-ride="carousel" data-bs-interval="false">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="2" aria-label="Slide 3"></button>
                 </div>
-                <div class="form-floating m-2">
-                    <input type="number" min="3" max="{{ number_of_bars|add:'-1' }}" class="form-control" name="sma_crossover_slow_ma_period" id="id_sma_crossover_slow_ma_period" placeholder="3" required>
-                    <label for="id_sma_crossover_slow_ma_period">Slow MA Period</label>
-                    <div class="invalid-feedback">
-                        * Slow MA period must be greater than fast MA period and least than number of bars.
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="container">
+                            <div class="row justify-content-sm-center m-2">
+                                <legend>Backtest SMA Crossover Strategy</legend>
+                                <div class="col form-control m-2 text-center">
+                                    <form class="needs-validation" id="id_sma_crossover_form" action="backtest/" method="post" novalidate>
+                                        {% csrf_token %}
+                                        <div class="form-floating m-2">
+                                            <input type="number" min="2" class="form-control" name="sma_crossover_fast_ma_period" id="id_sma_crossover_fast_ma_period" placeholder="2" required>
+                                            <label for="id_sma_crossover_fast_ma_period">Fast MA Period</label>
+                                            <div class="invalid-feedback">
+                                                * Fast MA period must be at least 2.
+                                            </div>
+                                        </div>
+                                        <div class="form-floating m-2">
+                                            <input type="number" min="3" max="{{ number_of_bars|add:'-1' }}" class="form-control" name="sma_crossover_slow_ma_period" id="id_sma_crossover_slow_ma_period" placeholder="3" required>
+                                            <label for="id_sma_crossover_slow_ma_period">Slow MA Period</label>
+                                            <div class="invalid-feedback">
+                                                * Slow MA period must be greater than fast MA period and least than number of bars.
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="number_of_bars" id="id_number_of_bars" value="{{ number_of_bars }}">
+                                        <button type="submit" name="sma_crossover" class="btn btn-outline-primary mb-2">Submit</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="carousel-item">
+                        <div class="container">
+                            <div class="row justify-content-sm-center m-2">
+                                <legend>I am a long test</legend>
+                                <div class="col form-control m-2 text-center">
+                                    <form class="needs-validation" id="id_long_test_form" action="backtest/" method="post" novalidate>
+                                        {% csrf_token %}
+                                        <div class="form-floating m-2">
+                                            <input type="number" min="2" class="form-control" name="long_test_fast_ma_period" id="id_long_test_fast_ma_period" placeholder="2" required>
+                                            <label for="id_long_test_fast_ma_period">Fast MA Period</label>
+                                            <div class="invalid-feedback">
+                                                * Fast MA period must be at least 2.
+                                            </div>
+                                        </div>
+                                        <div class="form-floating m-2">
+                                            <input type="number" min="3" max="{{ number_of_bars|add:'-1' }}" class="form-control" name="long_test_slow_ma_period" id="id_long_test_slow_ma_period" placeholder="3" required>
+                                            <label for="id_long_test_slow_ma_period">Slow MA Period</label>
+                                            <div class="invalid-feedback">
+                                                * Slow MA period must be greater than fast MA period and least than number of bars.
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="number_of_bars" id="id_number_of_bars" value="{{ number_of_bars }}">
+                                        <button type="submit" name="long_test" class="btn btn-outline-primary mb-2">Submit</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                <input type="hidden" name="number_of_bars" id="id_number_of_bars" value="{{ number_of_bars }}">
-                <button type="submit" name="sma_crossover" class="btn btn-outline-primary mb-2">SMA Crossover</button>
-            </form>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
 {% endif %}
 <script>
     $(document).ready(function () {
-        $.fn.dataTable.ext.errMode = 'throw';
-        $('#history_table').DataTable({
+        $.fn.dataTable.ext.errMode = "throw";
+        $("#history_table").DataTable({
             "serverSide": true,
             "deferRender": true,
             "ajax": "{{ script_prefix }}/api/candlesticks/?format=datatables",
@@ -110,11 +176,11 @@
                         return data.replace("T", " ");
                     }
                 },
-                { "data": "open", "render": $.fn.dataTable.render.number(',', '.', {{ decimal_place }}) },
-                { "data": "high", "render": $.fn.dataTable.render.number(',', '.', {{ decimal_place }}) },
-                { "data": "low", "render": $.fn.dataTable.render.number(',', '.', {{ decimal_place }}) },
-                { "data": "close", "render": $.fn.dataTable.render.number(',', '.', {{ decimal_place }}) },
-                { "data": "volume", "render": $.fn.dataTable.render.number(',', '.', 2) }
+                { "data": "open", "render": $.fn.dataTable.render.number(",", ".", {{ decimal_place }}) },
+                { "data": "high", "render": $.fn.dataTable.render.number(",", ".", {{ decimal_place }}) },
+                { "data": "low", "render": $.fn.dataTable.render.number(",", ".", {{ decimal_place }}) },
+                { "data": "close", "render": $.fn.dataTable.render.number(",", ".", {{ decimal_place }}) },
+                { "data": "volume", "render": $.fn.dataTable.render.number(",", ".", 2) }
             ]
         });
     });
@@ -153,7 +219,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 <script>
     $(document).ready(function () {
-        $('#id_download_csv_form').submit(function () {
+        $("#id_download_csv_form").submit(function () {
             blockUIForDownload();
         });
     });
@@ -162,10 +228,10 @@
 
     function blockUIForDownload() {
         var token = new Date().getTime(); //use the current timestamp as the token value
-        $('#id_download_csv_token_value').val(token);
+        $("#id_download_csv_token_value").val(token);
         $.blockUI();
         fileDownloadCheckTimer = window.setInterval(function () {
-            var cookieValue = $.cookie('download_csv_token_value');
+            var cookieValue = $.cookie("download_csv_token_value");
             if (cookieValue == token)
                 finishDownload();
         }, 1000);
@@ -173,7 +239,7 @@
 
     function finishDownload() {
         window.clearInterval(fileDownloadCheckTimer);
-        $.removeCookie('download_csv_token_value'); //clears this cookie value
+        $.removeCookie("download_csv_token_value"); //clears this cookie value
         $.unblockUI();
     }
 </script>
