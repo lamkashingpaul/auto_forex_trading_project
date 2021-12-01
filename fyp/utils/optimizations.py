@@ -1,30 +1,26 @@
-from tqdm.auto import tqdm
+from celery_progress.backend import ProgressRecorder
 import collections
 import csv
 import math
 import pickle
 
-PBAR = None
-
 
 class Optimizer:
-    def __init__(self, cerebro, strategy, generator, *args):
+    def __init__(self, celery, cerebro, strategy, generator, **kwargs):
         self.cerebro = cerebro
+        self.progress_recorder = ProgressRecorder(celery)
+        self.pregress = 0
+        self.total_testcase = sum(1 for _ in generator(**kwargs))
 
-        total_testcase = sum(1 for _ in generator(*args))
-
-        global PBAR
-        PBAR = tqdm(smoothing=0.05, desc='Optimization', total=total_testcase)
-
-        self.cerebro.optstrategy(strategy, optimization_dict=generator(*args))
+        self.cerebro.optstrategy(strategy, optimization_dict=generator(**kwargs))
         self.cerebro.optcallback(cb=self.bt_opt_callback)
 
     def start(self):
         return self.cerebro.run(runonce=False, stdstats=False)
 
     def bt_opt_callback(self, cb):
-        global PBAR
-        PBAR.update()
+        self.pregress += 1
+        self.progress_recorder.set_progress(self.pregress + 1, self.total_testcase)
 
 
 def flatten_dict(d, parent_key='', sep='_'):

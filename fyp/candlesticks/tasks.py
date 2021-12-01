@@ -2,6 +2,8 @@ from utils.commissions import ForexCommission
 from utils.constants import *
 from utils.psql import PSQLData
 from utils.strategies import MovingAveragesCrossover
+from utils.optimizations import Optimizer
+from utils.testcases import sma_testcase_generator
 
 from utils.plotter import BacktraderPlottly
 
@@ -9,25 +11,11 @@ from celery import shared_task
 from celery_progress.backend import ProgressRecorder
 
 from datetime import datetime, date, timedelta
-import os
 import plotly.io
-import tempfile
-import time
 
 
 @shared_task(bind=True)
-def long_test(self, seconds):
-    progress_recorder = ProgressRecorder(self)
-    result = 0
-    for i in range(seconds):
-        time.sleep(1)
-        result += i
-        progress_recorder.set_progress(i + 1, seconds)
-    return result
-
-
-@shared_task(bind=True)
-def celery_backtest(self, symbol, fromdate, todate, period, strategy, **parameters):
+def celery_backtest(self, symbol, fromdate, todate, period, strategy, optimization=False, **parameters):
 
     fromdate = datetime.strptime(fromdate, '%Y-%m-%dT%H:%M:%S')
     todate = datetime.strptime(todate, '%Y-%m-%dT%H:%M:%S.%f')
@@ -65,15 +53,23 @@ def celery_backtest(self, symbol, fromdate, todate, period, strategy, **paramete
     cerebro.addobserver(bt.observers.BuySell, barplot=True, bardist=0.0020)
     cerebro.addobserver(bt.observers.Trades, pnlcomm=True)
 
-    cerebro.addstrategy(MovingAveragesCrossover, **parameters)
-    print('Starting Portfolio Value: %.5f' % cerebro.broker.getvalue())
-    res = cerebro.run(runonce=False, stdstats=False)
-    print('Final Portfolio Value: %.5f' % cerebro.broker.getvalue())
+    if not optimization:
+        cerebro.addstrategy(MovingAveragesCrossover, **parameters)
+        cerebro.run(runonce=False, stdstats=False)
 
-    temp_dir = tempfile.gettempdir()
-    temp_name = f'{next(tempfile._get_candidate_names())}.html'
-    html_path = os.path.join(temp_dir, temp_name)
-    figs = cerebro.plot(BacktraderPlottly())
-    figs = [x for fig in figs for x in fig]  # flatten output
-    html_boby = ''.join(plotly.io.to_html(figs[i], full_html=False) for i in range(len(figs)))
+        figs = cerebro.plot(BacktraderPlottly())
+        figs = [x for fig in figs for x in fig]  # flatten 2d list
+        html_boby = ''.join(plotly.io.to_html(figs[i], full_html=False) for i in range(len(figs)))
+
+    else:
+        strats = []
+        optimizer = Optimizer(task_id=self.request.id,
+                              celery=self,
+                              strategy=MovingAveragesCrossover,
+                              generator=sma_testcase_generator,
+                              )
+        runstrat = optimizer.start()
+        strats = [x[0] for x in runstrat]  # flatten 2d list
+        html_boby = 'I am optimization and I am called.'
+
     return html_boby

@@ -75,10 +75,42 @@
         align-items: flex-end;
         width: 16px;
     }
+
     .carousel-indicators {
         margin-bottom: -1px
     }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $.validator.addMethod("gt",function (value, element, param) {
+            var $otherElement = $(param);
+            return parseInt(value, 10) > parseInt($otherElement.val(), 10);
+        });
+
+        $('#id_sma_crossover_form').validate({
+            errorPlacement: function (error, element) {
+                error.addClass('invalid-feedback');
+                element.closest('.form-group').append(error);
+            },
+
+            highlight: function (element, errorClass, validClass) {
+                $(element).addClass('is-invalid');
+            },
+
+            unhighlight: function (element, errorClass, validClass) {
+                $(element).removeClass('is-invalid');
+            },
+
+            errorElement: 'span',
+            rules: {
+                sma_crossover_slow_ma_period: {
+                    gt: '#id_sma_crossover_fast_ma_period',
+                }
+            },
+        });
+    });
+</script>
 <div class="container">
     <div class="row m-2">
         <legend>Actions</legend>
@@ -87,7 +119,6 @@
                 <div class="carousel-indicators">
                     <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
                     <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                    <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="2" aria-label="Slide 3"></button>
                 </div>
                 <div class="carousel-inner">
                     <div class="carousel-item active">
@@ -101,7 +132,7 @@
                                             <input type="number" min="2" class="form-control" name="sma_crossover_fast_ma_period" id="id_sma_crossover_fast_ma_period" placeholder="2" required>
                                             <label for="id_sma_crossover_fast_ma_period">Fast MA Period</label>
                                             <div class="invalid-feedback">
-                                                * Fast MA period must be at least 2.
+                                                * Fast MA period must be at least 2 and less than Slow MA.
                                             </div>
                                         </div>
                                         <div class="form-floating m-2">
@@ -122,26 +153,26 @@
                     <div class="carousel-item">
                         <div class="container">
                             <div class="row justify-content-sm-center m-2">
-                                <legend>I am a long test</legend>
+                                <legend>Optimize SMA Crossover Strategy</legend>
                                 <div class="col form-control m-2 text-center">
-                                    <form class="needs-validation" id="id_long_test_form" action="backtest/" method="post" novalidate>
+                                    <form class="needs-validation" id="id_opt_sma_crossover_form" action="backtest/" method="post" novalidate>
                                         {% csrf_token %}
                                         <div class="form-floating m-2">
-                                            <input type="number" min="2" class="form-control" name="sma_crossover_fast_ma_period" id="id_long_test_fast_ma_period" placeholder="2" required>
-                                            <label for="id_long_test_fast_ma_period">Fast MA Period</label>
+                                            <input type="number" min="2" class="form-control" name="sma_crossover_fast_ma_period" id="id_opt_sma_crossover_fast_ma_period" placeholder="2" required>
+                                            <label for="id_long_test_fast_ma_period">Max. Fast MA Period</label>
                                             <div class="invalid-feedback">
-                                                * Fast MA period must be at least 2.
+                                                * Fast MA period must be at least 2 and less than Slow MA.
                                             </div>
                                         </div>
                                         <div class="form-floating m-2">
-                                            <input type="number" min="3" max="{{ number_of_bars|add:'-1' }}" class="form-control" name="sma_crossover_slow_ma_period" id="id_long_test_slow_ma_period" placeholder="3" required>
-                                            <label for="id_long_test_slow_ma_period">Slow MA Period</label>
+                                            <input type="number" min="3" max="{{ number_of_bars|add:'-1' }}" class="form-control" name="sma_crossover_slow_ma_period" id="id_opt_sma_crossover_slow_ma_period" placeholder="3" required>
+                                            <label for="id_long_test_slow_ma_period">Max. Slow MA Period</label>
                                             <div class="invalid-feedback">
                                                 * Slow MA period must be greater than fast MA period and least than number of bars.
                                             </div>
                                         </div>
-                                        <input type="hidden" name="number_of_bars" id="id_number_of_bars" value="{{ number_of_bars }}">
-                                        <button type="submit" name="celery_backtest" class="btn btn-outline-primary mb-2">Submit</button>
+                                        <input type="hidden" name="number_of_bars" id="id_opt_number_of_bars" value="{{ number_of_bars }}">
+                                        <button type="submit" name="opt_sma_crossover" class="btn btn-outline-primary mb-2">Submit</button>
                                     </form>
                                 </div>
                             </div>
@@ -251,7 +282,7 @@
                 {% if limit_of_result %}
                 <label class="mb-2">(*Number of displayed rows is limited to {{ limit_of_result }}, but all rows are available for download)</label>
                 {% endif %}
-                <input type="hidden" id="id_download_csv_token_value" name="download_csv_token_value"/>
+                <input type="hidden" id="id_download_csv_token_value" name="download_csv_token_value" />
                 <button type="submit" id="id_download_csv" name="download_csv" class="btn btn-outline-primary mb-2">Download as CSV</button>
             </form>
         </div>

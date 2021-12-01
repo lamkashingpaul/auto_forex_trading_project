@@ -10,22 +10,13 @@ from fyp.celery import app
 from .forms import HistoryForm, SMACrossoverForm, TaskIDForm
 from .models import Candlestick
 from .serializers import CandlestickSerializer
-from .tasks import long_test, celery_backtest
-
-from utils.commissions import ForexCommission
-from utils.constants import *
-from utils.psql import PSQLData
-from utils.strategies import BuyAndHold, MovingAveragesCrossover
+from .tasks import celery_backtest
 
 from datetime import date, timedelta
 from celery.result import AsyncResult
 
-import backtrader as bt
 import csv
 import json
-import os
-import pandas as pd
-import tempfile
 
 
 # Create your views here.
@@ -206,8 +197,6 @@ def backtest(request):
         template = loader.get_template('backtest/index.html')
         context = {}
         if 'sma_crossover' in request.POST:
-            template = loader.get_template('backtest/index.html')
-            context = {}
             sma_crossover_form = SMACrossoverForm(request.POST)
             if sma_crossover_form.is_valid():
                 request.session['saved_sma_crossover_form'] = json.dumps(sma_crossover_form.cleaned_data, default=str)
@@ -226,22 +215,24 @@ def backtest(request):
                     source = saved_history_form.cleaned_data['source']
                     price_type = saved_history_form.cleaned_data['price_type']
 
-                    query_results = Candlestick.objects.filter(time__range=(date_from, date_before),
-                                                               symbol__exact=symbol,
-                                                               period__exact=period,
-                                                               source__exact=source,
-                                                               price_type__exact=price_type,
-                                                               volume__gt=0,
-                                                               ).order_by()
-                    if query_results:
-                        res = celery_backtest.delay(symbol, date_from, date_before, period, 'MovingAveragesCrossover')
-                        template = loader.get_template('backtest/index.html')
-                        context = {'task_id': res.task_id,
-                                   'res_is_ready': res.state,
-                                   'html_body': f'Queued long test which has task_id: {res.task_id}',
-                                   }
+                    res = celery_backtest.delay(symbol=symbol,
+                                                fromdate=date_from,
+                                                todate=date_before,
+                                                period=period,
+                                                strategy=None,
+                                                optimization=False,
+                                                fast_ma_period=sma_crossover_fast_ma_period,
+                                                slow_ma_period=sma_crossover_slow_ma_period,
+                                                )
+                    context = {'task_id': res.task_id,
+                               'res_is_ready': res.state,
+                               'html_body': f'Queued long test which has task_id: {res.task_id}',
+                               }
+            else:
+                template = loader.get_template('backtest/result/index.html')
+                context['html_body'] = 'Invalid Parameters. Please go back and try again'
 
-        elif 'celery_backtest' in request.POST:
+        elif 'opt_sma_crossover' in request.POST:
             template = loader.get_template('backtest/index.html')
             context = {}
             sma_crossover_form = SMACrossoverForm(request.POST)
@@ -267,6 +258,7 @@ def backtest(request):
                                                 todate=date_before,
                                                 period=period,
                                                 strategy=None,
+                                                optimization=True,
                                                 fast_ma_period=sma_crossover_fast_ma_period,
                                                 slow_ma_period=sma_crossover_slow_ma_period,
                                                 )
