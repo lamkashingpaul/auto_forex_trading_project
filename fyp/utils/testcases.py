@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import backtrader as bt
 import itertools
 import random
 
@@ -25,8 +26,8 @@ def slides_generator(datetime_from, datetime_before, durations, steps, **kwargs)
                     datetime_from += step
 
 
-def sma_testcase_generator(max_period):
-    max_period += 1
+def sma_testcase_generator(**kwargs):
+    max_period = max(value for key, value in kwargs.items() if '_ma_period' in key)
     testcases = itertools.product(range(1, max_period), range(1, max_period))
     for fast_ma_period, slow_ma_period in testcases:
         if fast_ma_period != slow_ma_period:

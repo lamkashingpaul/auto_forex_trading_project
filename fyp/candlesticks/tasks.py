@@ -2,7 +2,7 @@ from utils.commissions import ForexCommission
 from utils.constants import *
 from utils.psql import PSQLData
 from utils.strategies import MovingAveragesCrossover
-from utils.optimizations import Optimizer
+from utils.optimizations import Optimizer, CeleryCerebro
 from utils.testcases import sma_testcase_generator
 
 from utils.plotter import BacktraderPlottly
@@ -22,7 +22,7 @@ def celery_backtest(self, symbol, fromdate, todate, period, strategy, optimizati
 
     period, timeframe, compression, = next(((key, value[1], value[2]) for key, value in PERIODS.items() if value[0] == period), PERIODS['H1'])
 
-    cerebro = bt.Cerebro()
+    cerebro = CeleryCerebro()
 
     cash = 200000
     leverage = 1
@@ -63,13 +63,14 @@ def celery_backtest(self, symbol, fromdate, todate, period, strategy, optimizati
 
     else:
         strats = []
-        optimizer = Optimizer(task_id=self.request.id,
-                              celery=self,
+        optimizer = Optimizer(celery=self,
+                              cerebro=cerebro,
                               strategy=MovingAveragesCrossover,
                               generator=sma_testcase_generator,
+                              **parameters,
                               )
         runstrat = optimizer.start()
         strats = [x[0] for x in runstrat]  # flatten 2d list
-        html_boby = 'I am optimization and I am called.'
+        html_boby = 'Optimization done. Visualization Working in Progress.'
 
     return html_boby
