@@ -1,6 +1,4 @@
 #!/home/paullam/fyp/venv/bin/python3
-from backtrader_plotting import Bokeh
-from backtrader_plotting.schemes import Tradimo
 import argparse
 import backtrader as bt
 import datetime

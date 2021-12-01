@@ -2,6 +2,8 @@ from django import forms
 from .models import Candlestick
 from datetime import timedelta
 
+from uuid import UUID
+
 symbol_input_attrs = {
     'class': 'form-control',
 }
@@ -72,4 +74,17 @@ class SMACrossoverForm(forms.Form):
         number_of_bars = cleaned_data.get('number_of_bars')
         if not (1 < sma_crossover_fast_ma_period < sma_crossover_slow_ma_period < number_of_bars):
             raise forms.ValidationError('Invalid input periods.')
+        return cleaned_data
+
+
+class TaskIDForm(forms.Form):
+    task_id = forms.CharField()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        task_id = cleaned_data.get('task_id')
+        try:
+            UUID(task_id, version=4)
+        except ValueError:
+            return False
         return cleaned_data

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% if request.method == 'POST' %}
+<div class="container">
+    <div class="row m-2">
+        <div class="col form-control m-2 text-center">
+            {{ html_body|safe }}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

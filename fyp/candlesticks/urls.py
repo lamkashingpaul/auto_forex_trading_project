@@ -12,4 +12,5 @@ urlpatterns = [
     url('^celery-progress/', include('celery_progress.urls')),
     path('', views.index, name='index'),
     path('backtest/', views.backtest, name='index'),
+    path('backtest/result/', views.backtest_result, name='index'),
 ]

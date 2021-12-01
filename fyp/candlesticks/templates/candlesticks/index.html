@@ -127,21 +127,21 @@
                                     <form class="needs-validation" id="id_long_test_form" action="backtest/" method="post" novalidate>
                                         {% csrf_token %}
                                         <div class="form-floating m-2">
-                                            <input type="number" min="2" class="form-control" name="long_test_fast_ma_period" id="id_long_test_fast_ma_period" placeholder="2" required>
+                                            <input type="number" min="2" class="form-control" name="sma_crossover_fast_ma_period" id="id_long_test_fast_ma_period" placeholder="2" required>
                                             <label for="id_long_test_fast_ma_period">Fast MA Period</label>
                                             <div class="invalid-feedback">
                                                 * Fast MA period must be at least 2.
                                             </div>
                                         </div>
                                         <div class="form-floating m-2">
-                                            <input type="number" min="3" max="{{ number_of_bars|add:'-1' }}" class="form-control" name="long_test_slow_ma_period" id="id_long_test_slow_ma_period" placeholder="3" required>
+                                            <input type="number" min="3" max="{{ number_of_bars|add:'-1' }}" class="form-control" name="sma_crossover_slow_ma_period" id="id_long_test_slow_ma_period" placeholder="3" required>
                                             <label for="id_long_test_slow_ma_period">Slow MA Period</label>
                                             <div class="invalid-feedback">
                                                 * Slow MA period must be greater than fast MA period and least than number of bars.
                                             </div>
                                         </div>
                                         <input type="hidden" name="number_of_bars" id="id_number_of_bars" value="{{ number_of_bars }}">
-                                        <button type="submit" name="long_test" class="btn btn-outline-primary mb-2">Submit</button>
+                                        <button type="submit" name="celery_backtest" class="btn btn-outline-primary mb-2">Submit</button>
                                     </form>
                                 </div>
                             </div>

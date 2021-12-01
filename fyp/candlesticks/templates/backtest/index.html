@@ -19,11 +19,6 @@
 {% if task_id %}
 <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
 <script>
-    $(function () {
-        var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
-        CeleryProgressBar.initProgressBar(progressUrl)
-    });
-
     window.onunload = function(evt) {
         const endpoint = "";
         var formData = new FormData();
@@ -33,6 +28,30 @@
         navigator.sendBeacon(endpoint, formData);
     };
 
+    $(function () {
+        var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
+        CeleryProgressBar.initProgressBar(progressUrl, {
+            onSuccess: customSuccess,
+        });
+
+    });
+
+    function customSuccess(progressBarElement, progressBarMessageElement) {
+        var url = "result/"
+        var form = $('<form action="' + url + '" method="post">' +
+          '<input type="text" name="task_id" value="{{ task_id }}" />' +
+          '{% csrf_token %}' +
+          '</form>');
+        $('body').append(form);
+        form.submit();
+
+        progressBarElement.innerHTML = (
+         "<figure class=\"image\"><img src=\"/static/projects/images/aww-yeah.jpg\"></figure>"
+        )
+        progressBarElement.style.backgroundColor = "#fff";
+        progressBarMessageElement.innerHTML = "success!"
+    }
+
 </script>
 <div class="container">
     <div class="row m-2">
@@ -41,7 +60,7 @@
                 <div id="progress-bar" class="progress-bar" style="background-color: #68a9ef; width: 0%;">&nbsp;</div>
             </div>
             <div id="progress-bar-message">Waiting for progress to start...</div>
-            <div id="celery-result"></div>
+            {% comment %} <div id="celery-result"></div> {% endcomment %}
         </div>
     </div>
 </div>

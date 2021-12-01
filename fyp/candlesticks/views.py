@@ -7,20 +7,18 @@ from django.urls import get_script_prefix
 from rest_framework import viewsets
 from fyp.celery import app
 
-from .forms import HistoryForm, SMACrossoverForm
+from .forms import HistoryForm, SMACrossoverForm, TaskIDForm
 from .models import Candlestick
 from .serializers import CandlestickSerializer
-from .tasks import long_test
+from .tasks import long_test, celery_backtest
 
 from utils.commissions import ForexCommission
 from utils.constants import *
 from utils.psql import PSQLData
 from utils.strategies import BuyAndHold, MovingAveragesCrossover
 
-from backtrader_plotting import Bokeh
-from backtrader_plotting.schemes import Tradimo
-from bs4 import BeautifulSoup
 from datetime import date, timedelta
+from celery.result import AsyncResult
 
 import backtrader as bt
 import csv
@@ -205,6 +203,8 @@ def index(request):
 def backtest(request):
 
     if request.method == 'POST':
+        template = loader.get_template('backtest/index.html')
+        context = {}
         if 'sma_crossover' in request.POST:
             template = loader.get_template('backtest/index.html')
             context = {}
@@ -234,62 +234,71 @@ def backtest(request):
                                                                volume__gt=0,
                                                                ).order_by()
                     if query_results:
-                        slice_start = max(len(query_results) - limit_of_result // 4, 0)
+                        res = celery_backtest.delay(symbol, date_from, date_before, period, 'MovingAveragesCrossover')
+                        template = loader.get_template('backtest/index.html')
+                        context = {'task_id': res.task_id,
+                                   'res_is_ready': res.state,
+                                   'html_body': f'Queued long test which has task_id: {res.task_id}',
+                                   }
 
-                        context['query_results'] = query_results[slice_start:]
-                        # backtest
-                        period, timeframe, compression, = next(((key, value[1], value[2]) for key, value in PERIODS.items() if value[0] == period), PERIODS['H1'])
-
-                        cerebro = bt.Cerebro()
-                        # cerebro.addstrategy(BuyAndHold)
-                        cerebro.addstrategy(MovingAveragesCrossover, print_log=True, fast_ma_period=sma_crossover_fast_ma_period, slow_ma_period=sma_crossover_slow_ma_period)
-                        data = PSQLData(symbol=symbol,
-                                        period=period,
-                                        timeframe=timeframe,
-                                        compression=compression,
-                                        fromdate=date_from,
-                                        todate=date_before)
-                        cerebro.adddata(data, name='test')
-                        cash = 200000.0
-                        cerebro.broker.setcash(cash)
-                        leverage = 1
-                        margin = cash / leverage
-                        cerebro.broker.addcommissioninfo(ForexCommission(leverage=leverage, margin=margin))
-                        print('Starting Portfolio Value: %.5f' % cerebro.broker.getvalue())
-                        cerebro.run(runonce=False)
-                        print('Final Portfolio Value: %.5f' % cerebro.broker.getvalue())
-
-                        temp_dir = tempfile.gettempdir()
-                        temp_name = f'{next(tempfile._get_candidate_names())}.html'
-                        html_path = os.path.join(temp_dir, temp_name)
-                        b = Bokeh(filename=html_path, style='bar', scheme=Tradimo(), output_mode='save', legend_text_color='#ff0000')
-                        cerebro.plot(b)
-
-                        with open(html_path) as f:
-                            soup = BeautifulSoup(f, 'html.parser')
-                            style = soup.find('style')
-                            html_style = ''.join(['%s' % x for x in style.contents])
-
-                            body = soup.find('body')
-                            html_body = ''.join(['%s' % x for x in body.contents])
-
-                            context['html_style'] = html_style
-                            context['html_body'] = html_body
-
-        elif 'long_test' in request.POST:
-            res = long_test.delay(60)
+        elif 'celery_backtest' in request.POST:
             template = loader.get_template('backtest/index.html')
-            context = {'task_id': res.task_id,
-                       'res_is_ready': res.state,
-                       'html_body': f'Queued long test which has task_id: {res.task_id}',
-                       }
+            context = {}
+            sma_crossover_form = SMACrossoverForm(request.POST)
+            if sma_crossover_form.is_valid():
+                request.session['saved_sma_crossover_form'] = json.dumps(sma_crossover_form.cleaned_data, default=str)
+                sma_crossover_fast_ma_period = sma_crossover_form.cleaned_data['sma_crossover_fast_ma_period']
+                sma_crossover_slow_ma_period = sma_crossover_form.cleaned_data['sma_crossover_slow_ma_period']
+                context['sma_crossover_fast_ma_period'] = sma_crossover_fast_ma_period
+                context['sma_crossover_slow_ma_period'] = sma_crossover_slow_ma_period
+
+                saved_history_form = HistoryForm(json.loads(request.session['saved_history_form']))
+                if saved_history_form.is_valid():
+
+                    symbol = saved_history_form.cleaned_data['symbol']
+                    date_from = saved_history_form.cleaned_data['date_from']
+                    date_before = saved_history_form.cleaned_data['date_before']
+                    period = saved_history_form.cleaned_data['period']
+                    source = saved_history_form.cleaned_data['source']
+                    price_type = saved_history_form.cleaned_data['price_type']
+
+                    res = celery_backtest.delay(symbol=symbol,
+                                                fromdate=date_from,
+                                                todate=date_before,
+                                                period=period,
+                                                strategy=None,
+                                                fast_ma_period=sma_crossover_fast_ma_period,
+                                                slow_ma_period=sma_crossover_slow_ma_period,
+                                                )
+                    context = {'task_id': res.task_id,
+                               'res_is_ready': res.state,
+                               'html_body': f'Queued long test which has task_id: {res.task_id}',
+                               }
+
         elif 'task_id' in request.POST:
-            task_id = request.POST["task_id"]
-            app.control.revoke(task_id, terminate=True)
-            print(f'Revoked task_id: {request.POST["task_id"]}')
-            return HttpResponse('')
+            task_id_form = TaskIDForm(request.POST)
+            if task_id_form.is_valid():
+                task_id = task_id_form.cleaned_data['task_id']
+                app.control.revoke(task_id, terminate=True)
+                print(f'Revoked task_id: {request.POST["task_id"]}')
+                return HttpResponse('')
 
         return HttpResponse(template.render(context, request))
 
+    else:
+        return redirect('/')
+
+
+def backtest_result(request):
+    if request.method == 'POST':
+        template = loader.get_template('backtest/result/index.html')
+        if 'task_id' in request.POST:
+            task_id_form = TaskIDForm(request.POST)
+            if task_id_form.is_valid():
+                task_id = task_id_form.cleaned_data['task_id']
+                res = AsyncResult(task_id)
+                context = {'html_body': res.get()}
+
+        return HttpResponse(template.render(context, request))
     else:
         return redirect('/')
