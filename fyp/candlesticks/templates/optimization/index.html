@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{{ html_body|safe }}
+
+{% if task_id %}
+<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+<script>
+    window.onunload = function (evt) {
+        const endpoint = "";
+        var formData = new FormData();
+        //Required by Django for form post
+        formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+        formData.append("task_id", "{{ task_id }}");
+        navigator.sendBeacon(endpoint, formData);
+    };
+
+    $(function () {
+        var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
+        CeleryProgressBar.initProgressBar(progressUrl, {
+            onSuccess: customSuccess,
+        });
+
+    });
+
+    function customSuccess(progressBarElement, progressBarMessageElement) {
+        var url = "result/"
+        var form = $('<form action="' + url + '" method="post">' +
+            '<input type="text" name="task_id" value="{{ task_id }}" />' +
+            '{% csrf_token %}' +
+            '</form>'
+        );
+        $('body').append(form);
+        form.submit();
+    }
+
+</script>
+<div class="container">
+    <div class="row m-2">
+        <div class="col form-control m-2 text-center">
+            <div class="progress-wrapper">
+                <div id="progress-bar" class="progress-bar" style="background-color: #68a9ef; width: 0%;">&nbsp;</div>
+            </div>
+            <div id="progress-bar-message">Waiting for progress to start...</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -125,6 +125,9 @@ class MovingAveragesCrossover(bt.Strategy):
             for key, value in self.p.optimization_dict.items():
                 setattr(self.p, key, value)
 
+        if 'JPY' in self.datas[0]._name:
+            self.p.one_lot_size /= 100
+
         self.fast_sma = fast_sma = bt.ind.SMA(period=self.p.fast_ma_period)  # fast moving average
         self.slow_sma = slow_sma = bt.ind.SMA(period=self.p.slow_ma_period)  # slow moving average
         self.crossover = bt.ind.CrossOver(fast_sma, slow_sma)  # crossover signal

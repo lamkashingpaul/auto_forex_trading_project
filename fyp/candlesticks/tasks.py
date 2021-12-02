@@ -36,8 +36,8 @@ def celery_backtest(self, symbol, fromdate, todate, period, strategy, optimizati
                     fromdate=fromdate,
                     todate=todate)
 
-    progress_recorder = ProgressRecorder(self)
-    progress_recorder.set_progress(0, len(data))
+    # progress_recorder = ProgressRecorder(self)
+    # progress_recorder.set_progress(0, len(data))
 
     cerebro.broker.setcash(cash)
     cerebro.broker.addcommissioninfo(ForexCommission(leverage=leverage, margin=margin))
@@ -60,17 +60,16 @@ def celery_backtest(self, symbol, fromdate, todate, period, strategy, optimizati
         figs = cerebro.plot(BacktraderPlottly())
         figs = [x for fig in figs for x in fig]  # flatten 2d list
         html_boby = ''.join(plotly.io.to_html(figs[i], full_html=False) for i in range(len(figs)))
+        return html_boby
 
     else:
-        strats = []
         optimizer = Optimizer(celery=self,
                               cerebro=cerebro,
                               strategy=MovingAveragesCrossover,
                               generator=sma_testcase_generator,
                               **parameters,
                               )
-        runstrat = optimizer.start()
-        strats = [x[0] for x in runstrat]  # flatten 2d list
-        html_boby = 'Optimization done. Visualization Working in Progress.'
+        optimizer.start()
 
-    return html_boby
+        df = optimizer.strats_df
+        return df.to_json()

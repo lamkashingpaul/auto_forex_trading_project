@@ -15,8 +15,10 @@ from .tasks import celery_backtest
 from datetime import date, timedelta
 from celery.result import AsyncResult
 
+
 import csv
 import json
+import pandas as pd
 
 
 # Create your views here.
@@ -232,8 +234,42 @@ def backtest(request):
                 template = loader.get_template('backtest/result/index.html')
                 context['html_body'] = 'Invalid Parameters. Please go back and try again'
 
-        elif 'opt_sma_crossover' in request.POST:
-            template = loader.get_template('backtest/index.html')
+        elif 'task_id' in request.POST:
+            task_id_form = TaskIDForm(request.POST)
+            if task_id_form.is_valid():
+                task_id = task_id_form.cleaned_data['task_id']
+                app.control.revoke(task_id, terminate=True)
+                print(f'Revoked task_id: {request.POST["task_id"]}')
+                return HttpResponse('')
+
+        return HttpResponse(template.render(context, request))
+
+    else:
+        return redirect('/')
+
+
+def backtest_result(request):
+    if request.method == 'POST':
+        template = loader.get_template('backtest/result/index.html')
+        if 'task_id' in request.POST:
+            task_id_form = TaskIDForm(request.POST)
+            if task_id_form.is_valid():
+                task_id = task_id_form.cleaned_data['task_id']
+                res = AsyncResult(task_id)
+                context = {'html_body': res.get()}
+
+        return HttpResponse(template.render(context, request))
+    else:
+        return redirect('/')
+
+
+def optimization(request):
+    if request.method == 'POST':
+        template = loader.get_template('optimization/index.html')
+        context = {}
+
+        if 'opt_sma_crossover' in request.POST:
+            template = loader.get_template('optimization/index.html')
             context = {}
             sma_crossover_form = SMACrossoverForm(request.POST)
             if sma_crossover_form.is_valid():
@@ -267,6 +303,10 @@ def backtest(request):
                                'html_body': f'Queued long test which has task_id: {res.task_id}',
                                }
 
+            else:
+                template = loader.get_template('optimization/result/index.html')
+                context['html_body'] = 'Invalid Parameters. Please go back and try again'
+
         elif 'task_id' in request.POST:
             task_id_form = TaskIDForm(request.POST)
             if task_id_form.is_valid():
@@ -281,15 +321,19 @@ def backtest(request):
         return redirect('/')
 
 
-def backtest_result(request):
+def optimization_result(request):
     if request.method == 'POST':
-        template = loader.get_template('backtest/result/index.html')
+        template = loader.get_template('optimization/result/index.html')
         if 'task_id' in request.POST:
             task_id_form = TaskIDForm(request.POST)
             if task_id_form.is_valid():
                 task_id = task_id_form.cleaned_data['task_id']
                 res = AsyncResult(task_id)
-                context = {'html_body': res.get()}
+                df = pd.DataFrame.from_dict(json.loads(res.get()))
+                best_row = df[df['returns_rtot'] == df['returns_rtot'].max()]
+                context = {'best_row': best_row.to_html(classes='table table-striped table-bordered table-sm'),
+                           'table': df.to_html(classes='table table-striped table-bordered table-sm'),
+                           }
 
         return HttpResponse(template.render(context, request))
     else:

@@ -13,4 +13,6 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('backtest/', views.backtest, name='index'),
     path('backtest/result/', views.backtest_result, name='index'),
+    path('optimization/', views.optimization, name='index'),
+    path('optimization/result/', views.optimization_result, name='index'),
 ]

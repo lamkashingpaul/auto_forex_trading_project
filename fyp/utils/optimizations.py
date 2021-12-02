@@ -5,6 +5,8 @@ import collections
 import csv
 import itertools
 import math
+import numbers
+import pandas as pd
 import pickle
 
 
@@ -19,7 +21,42 @@ class Optimizer:
         self.cerebro.optcallback(cb=self.bt_opt_callback)
 
     def start(self):
-        return self.cerebro.run(runonce=False, stdstats=False)
+        runstrat = self.cerebro.run(runonce=False, stdstats=False)
+        self.strats = [x[0] for x in runstrat]  # flatten 2d list
+        self.strats_df = self.build_strats_df()
+
+    def build_strats_df(self):
+        cols = tuple(self.strats[0].p._getkeys())
+        for name_of_analyzer, analyzer in zip(self.strats[0].analyzers._names, self.strats[0].analyzers._items):
+            if name_of_analyzer in ('tradeanalyzer', 'transactions'):
+                continue
+
+            else:
+                rets_dict = analyzer.get_analysis()
+                rets_dict = flatten_dict(rets_dict)
+                for name_of_ret in rets_dict.keys():
+                    cols += (f'{name_of_analyzer}_{name_of_ret}',)
+
+        df = pd.DataFrame(columns=cols)
+        self.pregress, self.total_testcase = 0, len(self.strats)
+
+        for strat in self.strats:
+            row = [value if isinstance(value, numbers.Number) else str(value) for value in strat.p._getvalues()]
+            for name_of_analyzer, analyzer in zip(strat.analyzers._names, strat.analyzers._items):
+                if name_of_analyzer in ('tradeanalyzer', 'transactions'):
+                    continue
+
+                else:
+                    rets_dict = analyzer.get_analysis()
+                    rets_dict = flatten_dict(rets_dict)
+                    for ret in rets_dict.values():
+                        row += [str(ret)]
+
+            df.loc[len(df)] = row
+            self.pregress += 1
+            self.progress_recorder.set_progress(self.pregress + 1, self.total_testcase)
+
+        return df
 
     def bt_opt_callback(self, cb):
         self.pregress += 1

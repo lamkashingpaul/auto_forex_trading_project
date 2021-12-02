@@ -5,10 +5,8 @@
 {% if request.method == 'POST' %}
 <div class="container">
     <div class="row m-2">
-        <legend>Result of Backtest</legend>
-        <div class="col form-control m-2 text-center">
-            {{ html_body|safe }}
-        </div>
+            {{ best_row|safe }}
+            {{ table|safe }}
     </div>
 </div>
 {% endif %}
