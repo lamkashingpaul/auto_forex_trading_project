@@ -12,9 +12,8 @@ fyp/executions/reports/
 
 # Python virtual environment
 venv/
-*fypenv/
 
-# UWSGI Sock
+# UWSGI Sock for production
 fyp/fyp.sock
 
 # Byte-compiled / optimized / DLL files

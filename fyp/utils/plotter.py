@@ -345,7 +345,7 @@ class BacktraderPlottly(metaclass=bt.MetaParams):
             self.plotind(iref, downind)
 
     def pltmethod(self, ax, xdata, lplotarray, secondary_y, **plotkwargs):
-        print(ax, plotkwargs)
+        # print(ax, plotkwargs)
 
         opacity = 1
         line = dict(color=plotkwargs['color'])  # line or marker style
@@ -398,7 +398,7 @@ class BacktraderPlottly(metaclass=bt.MetaParams):
             rowspan = self.pinf.sch.rowsminor
 
         ax = self.newaxis(data.volume, rowspan=rowspan)
-        print(ax, 'vol')
+        # print(ax, 'vol')
 
         # if self.pinf.sch.voloverlay:
         if voloverlay:

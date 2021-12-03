@@ -15,10 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-import debug_toolbar
+from django.conf import settings
+admin.autodiscover()
 
 urlpatterns = [
     path('', include('candlesticks.urls')),
     path('admin/', admin.site.urls),
-    path('__debug__/', include(debug_toolbar.urls)),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += path('__debug__/', include(debug_toolbar.urls)),
