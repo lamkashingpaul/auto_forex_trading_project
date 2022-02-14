@@ -5,7 +5,7 @@ import sys
 
 # Connect to existing Django Datebase
 sys.path.append('/home/paullam/fyp/fyp/')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'fyp.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'fyp.settings.local'
 django.setup()
 
 from calendar import monthrange
@@ -32,7 +32,7 @@ SYMBOLS = [
     'EURCAD', 'CADJPY', 'GBPNZD', 'CADCHF', 'CHFJPY', 'NZDCAD', 'NZDCHF',
 ]
 PRICE_TYPES = ['BID', 'ASK']
-NUMBER_OF_WORKERS = 16
+NUMBER_OF_WORKERS = 4
 SOURCE = 'Dukascopy'
 
 # default date range

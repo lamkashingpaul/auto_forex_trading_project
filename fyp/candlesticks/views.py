@@ -330,7 +330,7 @@ def optimization_result(request):
                 task_id = task_id_form.cleaned_data['task_id']
                 res = AsyncResult(task_id)
                 df = pd.DataFrame.from_dict(json.loads(res.get()))
-                best_row = df[df['returns_rtot'] == df['returns_rtot'].max()]
+                best_row = df.loc[df['returns_rtot'] == df['returns_rtot'].max()]
                 context = {'best_row': best_row.to_html(classes='table table-striped table-bordered table-sm'),
                            'table': df.to_html(classes='table table-striped table-bordered table-sm'),
                            }

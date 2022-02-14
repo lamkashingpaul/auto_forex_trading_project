@@ -1,5 +1,6 @@
 from billiard.pool import Pool
 from celery_progress.backend import ProgressRecorder
+from numbers import Number
 import backtrader as bt
 import collections
 import csv
@@ -50,7 +51,7 @@ class Optimizer:
                     rets_dict = analyzer.get_analysis()
                     rets_dict = flatten_dict(rets_dict)
                     for ret in rets_dict.values():
-                        row += [str(ret)]
+                        row += [ret if isinstance(ret, Number) else str(ret)]
 
             df.loc[len(df)] = row
             self.pregress += 1

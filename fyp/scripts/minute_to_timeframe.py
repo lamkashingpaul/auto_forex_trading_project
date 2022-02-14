@@ -4,7 +4,7 @@ import os
 import sys
 # Connect to existing Django Datebase
 sys.path.append('/home/paullam/fyp/fyp/')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'fyp.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'fyp.settings.local'
 django.setup()
 
 from candlesticks.models import Candlestick

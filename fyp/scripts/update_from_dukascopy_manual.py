@@ -5,7 +5,7 @@ import sys
 
 # Connect to existing Django Datebase
 sys.path.append('/home/paullam/fyp/fyp/')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'fyp.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'fyp.settings.local'
 django.setup()
 
 from calendar import monthrange
@@ -26,12 +26,12 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 # default parameters for data source
 DATA_ROOT = '/home/paullam/fyp/data'
 SYMBOLS = ['EURCAD', 'CADJPY', 'GBPNZD', 'CADCHF', 'CHFJPY', 'NZDCAD', 'NZDCHF', ]
-PRICE_TYPES = ['ASK']  # or 'ASK'
-NUMBER_OF_WORKERS = 16
+PRICE_TYPES = ['BID']  # or 'ASK'
+NUMBER_OF_WORKERS = 4
 SOURCE = 'Dukascopy'
 
 # default date range
-START_DATE = date(2003, 5, 4)
+START_DATE = date(2021, 11, 1)
 END_DATE = date.today()
 
 
@@ -74,14 +74,15 @@ def get_minute_bars_from_bi5_candlestick(date):
             save_path = os.path.join(save_dir, save_filename)
 
             # try to get bi5 file from source
-            if not os.path.isfile(save_path):
-                dukascopy_month = f'{int(month) - 1:02d}'  # Month in Dukascopy starts from 00 to 11
-                time.sleep(random.uniform(1, 3))
-                r = requests.get(f'https://datafeed.dukascopy.com/datafeed/{symbol}/{year}/{dukascopy_month}/{day}/{price_type}_candles_min_1.bi5')
 
-                if r.status_code == 200:
-                    with open(save_path, 'wb') as f:
-                        f.write(r.content)
+            # if not os.path.isfile(save_path):
+            dukascopy_month = f'{int(month) - 1:02d}'  # Month in Dukascopy starts from 00 to 11
+            time.sleep(random.uniform(1, 3))
+            r = requests.get(f'https://datafeed.dukascopy.com/datafeed/{symbol}/{year}/{dukascopy_month}/{day}/{price_type}_candles_min_1.bi5')
+
+            if r.status_code == 200:
+                with open(save_path, 'wb') as f:
+                    f.write(r.content)
 
             if os.path.isfile(save_path):
                 period = 1  # minute bars are expected

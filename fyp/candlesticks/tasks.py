@@ -8,7 +8,6 @@ from utils.testcases import sma_testcase_generator
 from utils.plotter import BacktraderPlottly
 
 from celery import shared_task
-from celery_progress.backend import ProgressRecorder
 
 from datetime import datetime, date, timedelta
 import plotly.io
