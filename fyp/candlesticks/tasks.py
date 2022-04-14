@@ -5,7 +5,8 @@ from utils.strategies import MovingAveragesCrossover
 from utils.optimizations import Optimizer, CeleryCerebro
 from utils.testcases import sma_testcase_generator
 
-from utils.plotter import BacktraderPlottly
+from backtrader_plotly.plotter import BacktraderPlotly
+from backtrader_plotly.scheme import PlotScheme
 
 from celery import shared_task
 
@@ -56,7 +57,9 @@ def celery_backtest(self, symbol, fromdate, todate, period, strategy, optimizati
         cerebro.addstrategy(MovingAveragesCrossover, **parameters)
         cerebro.run(runonce=False, stdstats=False)
 
-        figs = cerebro.plot(BacktraderPlottly())
+        scheme = PlotScheme(decimal_places=5, max_legend_text_width=16)
+
+        figs = cerebro.plot(BacktraderPlotly(show=False, scheme=scheme))
         figs = [x for fig in figs for x in fig]  # flatten 2d list
         html_boby = ''.join(plotly.io.to_html(figs[i], full_html=False) for i in range(len(figs)))
         return html_boby

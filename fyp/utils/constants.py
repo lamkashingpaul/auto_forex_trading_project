@@ -1,5 +1,7 @@
 import backtrader as bt
 
+from scripts.update_from_dukascopy_manual import PRICE_TYPES
+
 MY_TABLE_NAME = 'candlesticks_candlestick'
 
 '''
@@ -23,4 +25,9 @@ SYMBOLS = [
     'EURJPY', 'EURNZD', 'EURUSD', 'GBPAUD', 'GBPCAD', 'GBPCHF',
     'GBPJPY', 'GBPNZD', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY',
     'NZDUSD', 'USDCAD', 'USDCHF', 'USDJPY',
+]
+
+PRICE_TYPES = [
+    'ASK',
+    'BID',
 ]

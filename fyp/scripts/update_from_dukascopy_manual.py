@@ -25,13 +25,17 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 
 # default parameters for data source
 DATA_ROOT = '/home/paullam/fyp/data'
-SYMBOLS = ['EURCAD', 'CADJPY', 'GBPNZD', 'CADCHF', 'CHFJPY', 'NZDCAD', 'NZDCHF', ]
-PRICE_TYPES = ['BID']  # or 'ASK'
+SYMBOLS = ['EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD',
+           'EURJPY', 'GBPJPY', 'EURGBP', 'AUDJPY', 'EURAUD', 'EURCHF', 'AUDNZD',
+           'NZDJPY', 'GBPAUD', 'GBPCAD', 'EURNZD', 'AUDCAD', 'GBPCHF', 'AUDCHF',
+           'EURCAD', 'CADJPY', 'GBPNZD', 'CADCHF', 'CHFJPY', 'NZDCAD', 'NZDCHF',
+           ]
+PRICE_TYPES = ['BID', 'ASK']  # or 'ASK'
 NUMBER_OF_WORKERS = 4
 SOURCE = 'Dukascopy'
 
 # default date range
-START_DATE = date(2021, 11, 1)
+START_DATE = date(2021, 1, 1)
 END_DATE = date.today()
 
 
