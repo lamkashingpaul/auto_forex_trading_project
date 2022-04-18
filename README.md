@@ -2,4 +2,4 @@
 
 # Project Homepage
 
-https://lamkashingpaul.com/fyp/
+https://lamkashingpaul.com/forex/

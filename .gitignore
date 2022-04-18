@@ -4,17 +4,14 @@
 # Dukascopy historical data
 data/
 
-# Sample data for backtrader
-datas/
-
-# Reports of execution
-fyp/executions/reports/
+# Reports of location execution
+auto_forex_trading_project/executions/reports/
 
 # Python virtual environment
 venv/
 
 # UWSGI Sock for production
-fyp/fyp.sock
+auto_forex_trading_project/forex.sock
 
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
