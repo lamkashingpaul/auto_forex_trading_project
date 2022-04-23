@@ -1,11 +1,12 @@
 #!/home/paullam/auto_forex_trading_project/venv/bin/python3
+from ...utils.commissions import ForexCommission
+from ...utils.constants import *
+from ...utils.datafeeds import PSQLData
+from ...utils.strategies import StrengthMeter
+from ...utils.testcases import strengthmeter_testcase_generator
+
 from datetime import datetime, timedelta, date
 from pathlib import Path
-from ...utils.commissions import ForexCommission
-from ...utils.testcases import strengthmeter_testcase_generator
-from ...utils.constants import *
-from ...utils.psql import PSQLData
-from ...utils.strategies import StrengthMeter
 
 import argparse
 import os

@@ -25,18 +25,23 @@ PERIODS = [0, 1, 5, 15, 30, 60, 240, 1440, 10080, 43200]
 
 # default parameters for data source
 DATA_ROOT = '/home/paullam/auto_forex_trading_project/data'
-SYMBOLS = ['EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD',
-           'EURJPY', 'GBPJPY', 'EURGBP', 'AUDJPY', 'EURAUD', 'EURCHF', 'AUDNZD',
-           'NZDJPY', 'GBPAUD', 'GBPCAD', 'EURNZD', 'AUDCAD', 'GBPCHF', 'AUDCHF',
-           'EURCAD', 'CADJPY', 'GBPNZD', 'CADCHF', 'CHFJPY', 'NZDCAD', 'NZDCHF',
-           ]
-PRICE_TYPES = ['BID', 'ASK']  # or 'ASK'
+
+# SYMBOLS = ['EURUSD', 'USDJPY', 'GBPUSD', 'AUDUSD', 'USDCAD', 'USDCHF', 'NZDUSD',
+#            'EURJPY', 'GBPJPY', 'EURGBP', 'AUDJPY', 'EURAUD', 'EURCHF', 'AUDNZD',
+#            'NZDJPY', 'GBPAUD', 'GBPCAD', 'EURNZD', 'AUDCAD', 'GBPCHF', 'AUDCHF',
+#            'EURCAD', 'CADJPY', 'GBPNZD', 'CADCHF', 'CHFJPY', 'NZDCAD', 'NZDCHF',
+#            ]
+# PRICE_TYPES = ['BID', 'ASK']  # or 'ASK'
+
+SYMBOLS = ['EURUSD']
+PRICE_TYPES = ['BID']
+
 NUMBER_OF_WORKERS = 4
 SOURCE = 'Dukascopy'
 
 # default date range
-START_DATE = date(2021, 1, 1)
-END_DATE = date.today()
+START_DATE = date(2016, 1, 1)
+END_DATE = date(2020, 1, 1)
 
 
 def date_xrange(start_date, end_date):

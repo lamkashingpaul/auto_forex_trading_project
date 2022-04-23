@@ -1,6 +1,9 @@
 from billiard.pool import Pool
 from celery_progress.backend import ProgressRecorder
 from numbers import Number
+from pathlib import Path
+from tqdm.auto import tqdm
+
 import backtrader as bt
 import collections
 import csv
@@ -10,21 +13,17 @@ import numbers
 import pandas as pd
 import pickle
 
+PBAR = None
+
 
 class Optimizer:
-    def __init__(self, celery, cerebro, strategy, generator, **kwargs):
-        self.cerebro = cerebro
-        self.progress_recorder = ProgressRecorder(celery)
-        self.pregress = 0
-        self.total_testcase = sum(1 for _ in generator(**kwargs))
-
-        self.cerebro.optstrategy(strategy, optimization_dict=generator(**kwargs))
-        self.cerebro.optcallback(cb=self.bt_opt_callback)
-
     def start(self):
         runstrat = self.cerebro.run(runonce=False, stdstats=False)
         self.strats = [x[0] for x in runstrat]  # flatten 2d list
         self.strats_df = self.build_strats_df()
+
+    def update_progress_bar(self):
+        return
 
     def build_strats_df(self):
         cols = tuple(self.strats[0].p._getkeys())
@@ -54,10 +53,50 @@ class Optimizer:
                         row += [ret if isinstance(ret, Number) else str(ret)]
 
             df.loc[len(df)] = row
-            self.pregress += 1
-            self.progress_recorder.set_progress(self.pregress + 1, self.total_testcase)
+
+            self.update_progress_bar()
 
         return df
+
+    def save_strats(self, output_path, chunk_size=512):
+        filepath = Path(f'{output_path}.csv')
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        self.strats_df.to_csv(filepath)
+
+        for i in range(math.ceil(len(self.strats) / chunk_size)):
+            pickle.dump(self.strats[i * chunk_size: (i + 1) * chunk_size], open(f'{output_path}_{i * chunk_size}_{(i + 1) * chunk_size - 1}.pickle', 'wb'))
+
+
+class OptimizerCLI(Optimizer):
+    def __init__(self, cerebro, strategy, generator, **kwargs):
+        self.cerebro = cerebro
+
+        total_testcase = sum(1 for _ in generator(**kwargs))
+
+        global PBAR
+        PBAR = tqdm(smoothing=0.05, desc='Optimization', total=total_testcase)
+
+        self.cerebro.optstrategy(strategy, optimization_dict=generator(**kwargs))
+        self.cerebro.optcallback(cb=self.bt_opt_callback)
+
+    def bt_opt_callback(self, cb):
+        global PBAR
+        PBAR.update()
+
+
+class OptimizerCelery(Optimizer):
+    def __init__(self, celery, cerebro, strategy, generator, **kwargs):
+        self.cerebro = cerebro
+        self.progress_recorder = ProgressRecorder(celery)
+        self.pregress = 0
+        self.total_testcase = sum(1 for _ in generator(**kwargs))
+
+        self.cerebro.optstrategy(strategy, optimization_dict=generator(**kwargs))
+        self.cerebro.optcallback(cb=self.bt_opt_callback)
+
+    def update_progress_bar(self):
+        self.pregress += 1
+        self.progress_recorder.set_progress(self.pregress + 1, self.total_testcase)
 
     def bt_opt_callback(self, cb):
         self.pregress += 1
@@ -73,42 +112,6 @@ def flatten_dict(d, parent_key='', sep='_'):
         else:
             items.append((new_key, v))
     return dict(items)
-
-
-def save_strats(strats, output_path, chunk_size=512):
-    with open(f'{output_path}.csv', 'w', newline='', encoding='utf-8') as w:
-        writer = csv.writer(w)
-        header_row = list(strats[0].p._getkeys())
-
-        for name_of_analyzer, analyzer in zip(strats[0].analyzers._names, strats[0].analyzers._items):
-            if name_of_analyzer in ('tradeanalyzer', 'transactions'):
-                continue
-
-            else:
-                rets_dict = analyzer.get_analysis()
-                rets_dict = flatten_dict(rets_dict)
-                for name_of_ret in rets_dict.keys():
-                    header_row += [f'{name_of_analyzer}_{name_of_ret}']
-
-        writer.writerow(header_row)
-
-        for strat in strats:
-            row = strat.p._getvalues()
-
-            for name_of_analyzer, analyzer in zip(strat.analyzers._names, strat.analyzers._items):
-                if name_of_analyzer in ('tradeanalyzer', 'transactions'):
-                    continue
-
-                else:
-                    rets_dict = analyzer.get_analysis()
-                    rets_dict = flatten_dict(rets_dict)
-                    for ret in rets_dict.values():
-                        row += [ret]
-
-            writer.writerow(row)
-
-    for i in range(math.ceil(len(strats) / chunk_size)):
-        pickle.dump(strats[i * chunk_size: (i + 1) * chunk_size], open(f'{output_path}_{i * chunk_size}_{(i + 1) * chunk_size - 1}.pickle', 'wb'))
 
 
 class CeleryCerebro(bt.Cerebro):

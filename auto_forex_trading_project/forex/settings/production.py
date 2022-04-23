@@ -19,6 +19,3 @@ DEBUG = False
 ALLOWED_HOSTS += ['lamkashingpaul.com']
 
 WSGI_APPLICATION = 'forex.wsgi.application'
-
-# correct the static url by adding the SCRIPT_NAME
-STATIC_URL = 'forex/' + STATIC_URL

@@ -66,7 +66,7 @@ def parse_args():
                         required=False, help='date ending the trade.')
 
     parser.add_argument('--price_type', '-pt', choices=PRICE_TYPES,
-                        default='ASK', required=False,
+                        default='BID', required=False,
                         help='price_types to be traded.')
 
     return parser.parse_args()
@@ -78,22 +78,23 @@ def generate_csv(symbol, period, fromdate, todate, price_type):
     with conn:
         with conn.cursor() as curs:
             # define query
-            query = sql.SQL('SELECT {time}, {open}, {high}, {low}, {close}, {volume}, {price_type} '
+            query = sql.SQL('SELECT {time}, {open}, {high}, {low}, {close}, {volume} '
                             'FROM {table} '
                             'WHERE ({period} = %s AND '
                             '{price_type} = %s AND '
                             '{symbol} = %s AND '
                             '{volume} > 0 AND '
-                            '{time} BETWEEN %s AND %s)').format(table=sql.Identifier('candlesticks_candlestick'),
-                                                                symbol=sql.Identifier('symbol'),
-                                                                price_type=sql.Identifier('price_type'),
-                                                                time=sql.Identifier('time'),
-                                                                open=sql.Identifier('open'),
-                                                                high=sql.Identifier('high'),
-                                                                low=sql.Identifier('low'),
-                                                                close=sql.Identifier('close'),
-                                                                volume=sql.Identifier('volume'),
-                                                                period=sql.Identifier('period'),)
+                            '{time} BETWEEN %s AND %s)'
+                            'ORDER BY {time}').format(table=sql.Identifier('candlesticks_candlestick'),
+                                                      symbol=sql.Identifier('symbol'),
+                                                      price_type=sql.Identifier('price_type'),
+                                                      time=sql.Identifier('time'),
+                                                      open=sql.Identifier('open'),
+                                                      high=sql.Identifier('high'),
+                                                      low=sql.Identifier('low'),
+                                                      close=sql.Identifier('close'),
+                                                      volume=sql.Identifier('volume'),
+                                                      period=sql.Identifier('period'),)
 
             # get query results
             curs.execute('SET TIME ZONE \'Hongkong\'')  # Convert to UTC timezone

@@ -1,8 +1,8 @@
 from utils.commissions import ForexCommission
 from utils.constants import *
-from utils.psql import PSQLData
+from utils.datafeeds import PSQLData
+from utils.optimizations import OptimizerCelery, CeleryCerebro
 from utils.strategies import MovingAveragesCrossover
-from utils.optimizations import Optimizer, CeleryCerebro
 from utils.testcases import sma_testcase_generator
 
 from backtrader_plotly.plotter import BacktraderPlotly
@@ -65,12 +65,12 @@ def celery_backtest(self, symbol, fromdate, todate, period, strategy, optimizati
         return html_boby
 
     else:
-        optimizer = Optimizer(celery=self,
-                              cerebro=cerebro,
-                              strategy=MovingAveragesCrossover,
-                              generator=sma_testcase_generator,
-                              **parameters,
-                              )
+        optimizer = OptimizerCelery(celery=self,
+                                    cerebro=cerebro,
+                                    strategy=MovingAveragesCrossover,
+                                    generator=sma_testcase_generator,
+                                    **parameters,
+                                    )
         optimizer.start()
 
         df = optimizer.strats_df

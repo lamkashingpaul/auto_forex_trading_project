@@ -155,7 +155,7 @@ def index(request):
                                                                price_type__exact=price_type,
                                                                time__range=(date_from, date_before),
                                                                volume__gt=0,
-                                                               )
+                                                               ).order_by('time')
 
                     # if there is result, generate the csv file from streaming
                     if query_results:
@@ -295,8 +295,8 @@ def optimization(request):
                                                 period=period,
                                                 strategy=None,
                                                 optimization=True,
-                                                fast_ma_period=sma_crossover_fast_ma_period,
-                                                slow_ma_period=sma_crossover_slow_ma_period,
+                                                n=0,
+                                                max_period=sma_crossover_slow_ma_period,
                                                 )
                     context = {'task_id': res.task_id,
                                'res_is_ready': res.state,

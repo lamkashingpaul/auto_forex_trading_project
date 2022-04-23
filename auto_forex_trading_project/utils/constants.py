@@ -1,7 +1,5 @@
 import backtrader as bt
 
-from scripts.update_from_dukascopy_manual import PRICE_TYPES
-
 MY_TABLE_NAME = 'candlesticks_candlestick'
 
 '''
@@ -18,6 +16,10 @@ PERIODS = {
     'W1': (10080, bt.TimeFrame.Days, 7),
     'MN': (43200, bt.TimeFrame.Months, 1),
 }
+
+CURRENCIES = [
+    'AUD', 'CAD', 'CHF', 'EUR', 'GBP', 'JPY', 'NZD', 'USD',
+]
 
 SYMBOLS = [
     'AUDCAD', 'AUDCHF', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF',
