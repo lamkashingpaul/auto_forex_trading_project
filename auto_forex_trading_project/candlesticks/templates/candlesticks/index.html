@@ -121,9 +121,19 @@
         });
     });
 </script>
+{% if history_form.symbol.value == 'EURUSD' %}
 <div class="container">
     <div class="row m-2">
-        <legend>Actions</legend>
+        <legend>Prediction</legend>
+        <div class="col form-control m-2 text-center">
+            {{ prediction_html_body|safe }}
+        </div>
+    </div>
+</div>
+{% endif %}
+<div class="container">
+    <div class="row m-2">
+        <legend>Action</legend>
         <div class="col form-control m-2 text-center">
             <div id="carouselExampleDark" class="carousel carousel-dark slide" data-bs-ride="carousel" data-bs-interval="false">
                 <div class="carousel-indicators">

@@ -1,3 +1,4 @@
+from unicodedata import name
 from django.db.models import F, Func, Value, CharField
 from django.http import HttpResponse, Http404, StreamingHttpResponse
 from django.shortcuts import redirect
@@ -12,13 +13,16 @@ from .models import Candlestick
 from .serializers import CandlestickSerializer
 from .tasks import celery_backtest
 
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 from celery.result import AsyncResult
 
 
 import csv
 import json
 import pandas as pd
+
+import plotly.graph_objects as go
+import plotly.io
 
 
 # Create your views here.
@@ -95,7 +99,7 @@ def index(request):
                                                            price_type__exact=price_type,
                                                            time__range=(date_from, maximum_date_before),
                                                            volume__gt=0,
-                                                           )
+                                                           ).order_by('time')
 
                 if query_results:
                     # save query result into ModelViewSet for html rendering
@@ -125,6 +129,9 @@ def index(request):
                                                            'price_type': request.POST['price_type'],
                                                            }
                                                   )
+
+            # add prediction plot
+            context['prediction_html_body'] = get_prediction_plot(symbol, period, source, price_type)
 
             # return html page which contains datetable
             return HttpResponse(template.render(context, request))
@@ -239,7 +246,7 @@ def backtest(request):
             if task_id_form.is_valid():
                 task_id = task_id_form.cleaned_data['task_id']
                 app.control.revoke(task_id, terminate=True)
-                print(f'Revoked task_id: {request.POST["task_id"]}')
+                # print(f'Revoked task_id: {request.POST["task_id"]}')
                 return HttpResponse('')
 
         return HttpResponse(template.render(context, request))
@@ -312,7 +319,7 @@ def optimization(request):
             if task_id_form.is_valid():
                 task_id = task_id_form.cleaned_data['task_id']
                 app.control.revoke(task_id, terminate=True)
-                print(f'Revoked task_id: {request.POST["task_id"]}')
+                # print(f'Revoked task_id: {request.POST["task_id"]}')
                 return HttpResponse('')
 
         return HttpResponse(template.render(context, request))
@@ -338,3 +345,89 @@ def optimization_result(request):
         return HttpResponse(template.render(context, request))
     else:
         return redirect('/')
+
+
+def get_prediction_plot(symbol, period, source, price_type):
+    n = 60  # default number of existing data points
+
+    # get almost 2n data points
+    fromdate = datetime.combine(date.today() - timedelta(days=2 * n - 1), datetime.min.time())
+    todate = fromdate + timedelta(days=2 * n, microseconds=-1)
+
+    # get historical data
+    query_results = Candlestick.objects.filter(symbol__exact=symbol,
+                                               period__exact=period,
+                                               source__exact=source,
+                                               price_type__exact=price_type,
+                                               time__range=(fromdate, todate),
+                                               volume__gt=0,
+                                               ).order_by('time')
+
+    query_results = query_results.values_list('time', 'open', 'high', 'low', 'close', 'volume')[max(0, len(query_results) - n):len(query_results)]
+    df = pd.DataFrame(query_results, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+
+    # get predicted data
+    prediction_startsfrom = df['time'].iloc[-1].to_pydatetime() + timedelta(days=1)
+    if prediction_startsfrom.isoweekday() == 6:  # forex market is not available on local Saturday time
+        # prediction shall start from Sunday
+        prediction_startsfrom = prediction_startsfrom + timedelta(days=1)
+
+    query_results = Candlestick.objects.filter(symbol__exact=symbol,
+                                               period__exact=period,
+                                               source__exact=source,
+                                               price_type__exact=price_type,
+                                               time__gte=fromdate,
+                                               predicted_volume__gt=0,
+                                               ).order_by('time')
+
+    query_results = query_results.values_list('time', 'predicted_open', 'predicted_high', 'predicted_low', 'predicted_close', 'predicted_volume')
+    predicted_df = pd.DataFrame(query_results, columns=['time', 'predicted_open', 'predicted_high', 'predicted_low', 'predicted_close', 'predicted_volume'])
+
+    # print(df)
+    # print(predicted_df)
+
+    past_predicted_df = predicted_df[(df['time'].iloc[0] <= predicted_df['time']) & (predicted_df['time'] <= df['time'].iloc[-1])]
+    future_predicted_df = predicted_df[predicted_df['time'] > df['time'].iloc[-1]]
+
+    fig = go.Figure(data=[go.Candlestick(x=df['time'],
+                                         open=df['open'], high=df['high'],
+                                         low=df['low'], close=df['close'],
+                                         name='Actual',
+                                         )])
+    if not past_predicted_df.empty:
+        fig.add_trace(go.Candlestick(x=past_predicted_df['time'],
+                                     open=past_predicted_df['predicted_open'],
+                                     high=past_predicted_df[['predicted_open', 'predicted_close']].max(axis=1),
+                                     low=past_predicted_df[['predicted_open', 'predicted_close']].min(axis=1),
+                                     close=past_predicted_df['predicted_close'],
+                                     name='Past Predictions',
+                                     increasing_line_color='cyan', decreasing_line_color='gray',
+                                     visible='legendonly',
+                                     ))
+
+    fig.add_trace(go.Candlestick(x=future_predicted_df['time'],
+                                 open=future_predicted_df['predicted_open'],
+                                 high=future_predicted_df[['predicted_open', 'predicted_close']].max(axis=1),
+                                 low=future_predicted_df[['predicted_open', 'predicted_close']].min(axis=1),
+                                 close=future_predicted_df['predicted_close'],
+                                 name='Future Predictions',
+                                 increasing_line_color='cyan', decreasing_line_color='gray',
+                                 ))
+
+    fig.update_layout(xaxis_rangeslider_visible=False,
+                      yaxis_title='Price',
+                      margin=dict(l=20, r=20, t=20, b=20),
+                      legend=dict(yanchor='top', y=1.1, xanchor='center', x=0.5),
+                      legend_orientation='h',
+                      shapes=[dict(x0=future_predicted_df['time'].iloc[0],
+                                   x1=future_predicted_df['time'].iloc[0],
+                                   y0=0, y1=1, xref='x', yref='paper', line_width=2)],
+                      annotations=[dict(x=future_predicted_df['time'].iloc[0],
+                                        y=0.02, xref='x', yref='paper',
+                                        showarrow=False, xanchor='left',
+                                        text='Future Prediction<br>Begins')],
+                      )
+
+    prediction_html_body = plotly.io.to_html(fig, full_html=False)
+
+    return prediction_html_body

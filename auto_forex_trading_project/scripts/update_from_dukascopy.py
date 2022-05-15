@@ -8,6 +8,8 @@ sys.path.append('/home/paullam/auto_forex_trading_project/auto_forex_trading_pro
 os.environ['DJANGO_SETTINGS_MODULE'] = 'forex.settings.local'
 django.setup()
 
+from add_prediction import add_prediction
+
 from calendar import monthrange
 from candlesticks.models import Candlestick
 from datetime import datetime, date, timedelta
@@ -36,7 +38,7 @@ NUMBER_OF_WORKERS = 4
 SOURCE = 'Dukascopy'
 
 # default date range
-START_DATE = date.today() - timedelta(days=7)
+START_DATE = date.today() - timedelta(days=14)
 END_DATE = date.today()
 
 
@@ -192,3 +194,6 @@ if __name__ == '__main__':
                     future_to_long_bars = {executor.submit(one_minute_to_target_timeframe, price_type, symbol, period, date): date for date in date_xrange(START_DATE, END_DATE)}
                     for future in concurrent.futures.as_completed(future_to_long_bars):
                         pass
+
+    # add prediction
+    add_prediction()

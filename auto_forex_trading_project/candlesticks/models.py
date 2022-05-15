@@ -76,14 +76,22 @@ class Candlestick(models.Model):
 
     symbol = models.CharField('Symbol', max_length=6, choices=SYMBOLS, default=EURUSD)
     time = models.DateTimeField('Datetime')
-    open = models.FloatField('Open')
-    high = models.FloatField('High')
-    low = models.FloatField('Low')
-    close = models.FloatField('Close')
-    volume = models.FloatField('Volume (M)')
+
+    open = models.FloatField('Open', null=True, blank=True, default=None)
+    high = models.FloatField('High', null=True, blank=True, default=None)
+    low = models.FloatField('Low', null=True, blank=True, default=None)
+    close = models.FloatField('Close', null=True, blank=True, default=None)
+    volume = models.FloatField('Volume (M)', null=True, blank=True, default=None)
+
     period = models.IntegerField('Period', choices=PERIODS, default=Tick)
-    source = models.CharField('Source', max_length=16, choices=SOURCES, default=Pandas)
+    source = models.CharField('Source', max_length=16, choices=SOURCES, default=Dukascopy)
     price_type = models.CharField('Price type', max_length=3, choices=PRICE_TYPES, default=BID)
+
+    predicted_open = models.FloatField('Predicted Open', null=True, blank=True, default=None)
+    predicted_high = models.FloatField('Predicted High', null=True, blank=True, default=None)
+    predicted_low = models.FloatField('Predicted Low', null=True, blank=True, default=None)
+    predicted_close = models.FloatField('Predicted Close', null=True, blank=True, default=None)
+    predicted_volume = models.FloatField('Predicted Volume (M)', null=True, blank=True, default=None)
 
     class Meta:
         constraints = [
