@@ -8,6 +8,8 @@ sys.path.append('/home/paullam/auto_forex_trading_project/auto_forex_trading_pro
 os.environ['DJANGO_SETTINGS_MODULE'] = 'forex.settings.local'
 django.setup()
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # make tf report error silent only
+
 from candlesticks.models import Candlestick
 
 from datetime import datetime, date, timedelta
@@ -15,6 +17,7 @@ from tensorflow import keras
 import joblib
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 
 def add_prediction(d=0):
@@ -130,7 +133,7 @@ def add_prediction(d=0):
 
 
 def main():
-    add_prediction(90)
+    add_prediction(0)
 
 
 if __name__ == '__main__':
