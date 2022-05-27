@@ -20,27 +20,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
-ALLOWED_HOSTS = []
-
 DEBUG = False
+
+ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Celery Progress bar
-    'celery_progress',
-
-    # My apps
+    # my apps
     'candlesticks.apps.CandlesticksConfig',
 
-    # Rest framework datatables
-    'rest_framework_datatables',
+    # 3rd party utils
+    'celery_progress',  # Celery Progress bar
+    'rest_framework_datatables',  # Rest framework datatables
 ]
 
 MIDDLEWARE = [

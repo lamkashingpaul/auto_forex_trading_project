@@ -8,7 +8,6 @@ sys.path.append('/home/paullam/auto_forex_trading_project/auto_forex_trading_pro
 os.environ['DJANGO_SETTINGS_MODULE'] = 'forex.settings.local'
 django.setup()
 
-from add_prediction import add_prediction
 
 from calendar import monthrange
 from candlesticks.models import Candlestick
@@ -38,7 +37,7 @@ NUMBER_OF_WORKERS = 4
 SOURCE = 'Dukascopy'
 
 # default date range
-START_DATE = date.today() - timedelta(days=14)
+START_DATE = date.today() - timedelta(days=7)
 END_DATE = date.today()
 
 
@@ -196,4 +195,5 @@ if __name__ == '__main__':
                         pass
 
     # add prediction
+    from add_prediction import add_prediction
     add_prediction()

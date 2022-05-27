@@ -1,4 +1,3 @@
-from typing import ClassVar
 from django.db import models
 
 

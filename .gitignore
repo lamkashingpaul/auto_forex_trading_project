@@ -4,13 +4,11 @@
 # Dukascopy historical data
 data/
 
-# Reports of location execution
-auto_forex_trading_project/executions/reports/
-
 # Python virtual environment
 venv/
 
-# UWSGI Sock for production
+# Productions Related
+auto_forex_trading_project/.env
 auto_forex_trading_project/forex.sock
 
 # Byte-compiled / optimized / DLL files
