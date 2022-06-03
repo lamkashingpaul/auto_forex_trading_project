@@ -10,6 +10,7 @@ venv/
 # Productions Related
 auto_forex_trading_project/.env
 auto_forex_trading_project/forex.sock
+auto_forex_trading_project/forex/static
 
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
