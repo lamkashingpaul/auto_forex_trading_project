@@ -131,7 +131,8 @@ def index(request):
                                                   )
 
             # add prediction plot
-            context['prediction_html_body'] = get_prediction_plot(symbol, period, source, price_type)
+            if symbol == 'EURUSD' and period == 1440:  # prediction is only available for EURUSD and daily bars
+                context['prediction_html_body'] = get_prediction_plot(symbol, period, source, price_type)
 
             # return html page which contains datetable
             return HttpResponse(template.render(context, request))
@@ -201,7 +202,6 @@ def index(request):
 
 # view for backtest
 def backtest(request):
-
     if request.method == 'POST':
         template = loader.get_template('backtest/index.html')
         context = {}

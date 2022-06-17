@@ -47,7 +47,6 @@
             $("#id_date_from").datepicker("setEndDate", maxDate);
         });
     });
-
 </script>
 <form class="row m-5 needs-validation" id="id_search_form" method="post" novalidate>
     {% csrf_token %}
@@ -83,7 +82,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
 <script>
     $(document).ready(function () {
-        $.validator.addMethod("gt",function (value, element, param) {
+        $.validator.addMethod("gt", function (value, element, param) {
             var $otherElement = $(param);
             return parseInt(value, 10) > parseInt($otherElement.val(), 10);
         });
@@ -121,7 +120,7 @@
         });
     });
 </script>
-{% if history_form.symbol.value == 'EURUSD' %}
+{% if prediction_html_body %}
 <div class="container">
     <div class="row m-2">
         <legend>AI Prediction</legend>
